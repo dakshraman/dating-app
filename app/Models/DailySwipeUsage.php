@@ -12,7 +12,7 @@ class DailySwipeUsage extends Model
 
     protected $table = 'daily_swipe_usage';
 
-    protected $fillable = ['user_id', 'date', 'count'];
+    protected $fillable = ['user_id', 'date', 'count', 'super_like_count'];
 
     protected function casts(): array
     {

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('is_verified')->default(false)->after('profile_photo');
             $table->boolean('is_active')->default(true)->after('is_verified');
             $table->timestamp('last_active_at')->nullable()->after('is_active');
+            $table->timestamp('last_seen_at')->nullable()->after('last_active_at');
             $table->string('phone')->nullable()->unique()->after('name');
         });
     }
@@ -26,7 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'is_verified', 'is_active', 'last_active_at', 'phone']);
+            $table->dropColumn(['gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'is_verified', 'is_active', 'last_active_at', 'last_seen_at', 'phone']);
         });
     }
 };
