@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\ConversationDeleted;
 use App\Events\MessageDelivered;
 use App\Events\MessageRead;
 use App\Events\MessageSent;
 use App\Events\TypingIndicator;
+use App\Events\TypingStopped;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -22,13 +24,17 @@ class ChatController extends Controller
     {
         $user = $request->user();
 
-        $conversations = Conversation::where('user1_id', $user->id)
-            ->orWhere('user2_id', $user->id)
+        $conversations = Conversation::whereParticipant($user)
             ->with(['user1', 'user2', 'match'])
             ->orderBy('last_message_at', 'desc')
             ->get()
             ->map(function ($conv) use ($user) {
                 $other = $conv->getOtherUser($user);
+
+                if ($other->blockedUsers()->where('blocked_id', $user->id)->exists()) {
+                    return null;
+                }
+
                 $lastMessage = $conv->messages()->latest()->first();
                 $unreadCount = $conv->messages()
                     ->where('sender_id', '!=', $user->id)
@@ -56,7 +62,9 @@ class ChatController extends Controller
                     'unread_count' => $unreadCount,
                     'last_message_at' => $conv->last_message_at,
                 ];
-            });
+            })
+            ->filter()
+            ->values();
 
         return response()->json($conversations);
     }
@@ -66,6 +74,12 @@ class ChatController extends Controller
         $user = $request->user();
 
         if ($conversation->user1_id !== $user->id && $conversation->user2_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $otherUser = $conversation->getOtherUser($user);
+
+        if ($otherUser->blockedUsers()->where('blocked_id', $user->id)->exists()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -132,6 +146,20 @@ class ChatController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        $otherUser = $conversation->getOtherUser($user);
+
+        if ($otherUser->blockedUsers()->where('blocked_id', $user->id)->exists()) {
+            return response()->json(['message' => 'You cannot send messages to this user'], 403);
+        }
+
+        if ($user->blockedUsers()->where('blocked_id', $otherUser->id)->exists()) {
+            return response()->json(['message' => 'Unblock the user to send messages'], 403);
+        }
+
+        if ($conversation->isDeletedBy($user)) {
+            $conversation->restoreForUser($user);
+        }
+
         $validator = Validator::make($request->all(), [
             'content' => 'required_without:file|string|max:5000',
             'type' => 'sometimes|string|in:text,image,voice',
@@ -157,10 +185,6 @@ class ChatController extends Controller
         $message->load(['sender', 'replyTo.sender']);
 
         broadcast(new MessageSent($message))->toOthers();
-
-        $otherUser = $conversation->user1_id === $user->id
-            ? $conversation->user2
-            : $conversation->user1;
 
         if ($otherUser && filled($otherUser->fcm_tokens)) {
             Notification::send($otherUser, new NewMessageNotification($message));
@@ -244,9 +268,44 @@ class ChatController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        $otherUser = $conversation->getOtherUser($user);
+
+        if ($otherUser->blockedUsers()->where('blocked_id', $user->id)->exists()) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         broadcast(new TypingIndicator($conversation->id, $user->id, $user->name))->toOthers();
 
         return response()->json(['message' => 'Typing indicator sent']);
+    }
+
+    public function stopTyping(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($conversation->user1_id !== $user->id && $conversation->user2_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        broadcast(new TypingStopped($conversation->id, $user->id, $user->name))->toOthers();
+
+        return response()->json(['message' => 'Typing stopped']);
+    }
+
+    public function deleteConversation(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($conversation->user1_id !== $user->id && $conversation->user2_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $column = $user->id === $conversation->user1_id ? 'user1_deleted_at' : 'user2_deleted_at';
+        $conversation->update([$column => now()]);
+
+        broadcast(new ConversationDeleted($conversation, $user->id))->toOthers();
+
+        return response()->json(['message' => 'Conversation deleted']);
     }
 
     public function updateLastSeen(Request $request): JsonResponse
@@ -286,16 +345,37 @@ class ChatController extends Controller
     public function blockUser(Request $request): JsonResponse
     {
         $request->validate(['user_id' => 'required|exists:users,id']);
-        $request->user()->blockedUsers()->syncWithoutDetaching([$request->integer('user_id')]);
+
+        $userId = $request->integer('user_id');
+
+        if ($request->user()->id === $userId) {
+            return response()->json(['message' => 'Cannot block yourself'], 422);
+        }
+
+        $request->user()->blockedUsers()->syncWithoutDetaching([$userId]);
 
         return response()->json(['message' => 'User blocked']);
+    }
+
+    public function unblockUser(Request $request, string $id): JsonResponse
+    {
+        $request->user()->blockedUsers()->detach((int) $id);
+
+        return response()->json(['message' => 'User unblocked']);
+    }
+
+    public function blockedUsers(Request $request): JsonResponse
+    {
+        $blocked = $request->user()->blockedUsers()
+            ->get(['users.id', 'users.name', 'users.profile_photo']);
+
+        return response()->json($blocked);
     }
 
     public function reportUser(Request $request): JsonResponse
     {
         $request->validate(['user_id' => 'required|exists:users,id']);
 
-        // Store report logic
         $request->user()->reports()->create([
             'reported_id' => $request->integer('user_id'),
         ]);

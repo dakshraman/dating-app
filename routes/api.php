@@ -36,16 +36,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/matches/{id}', [SwipeController::class, 'destroy']);
 
     Route::get('/conversations', [ChatController::class, 'conversations']);
+    Route::delete('/conversations/{conversation}', [ChatController::class, 'deleteConversation']);
     Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage']);
     Route::post('/conversations/{conversation}/read', [ChatController::class, 'markAsRead']);
     Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing']);
+    Route::delete('/conversations/{conversation}/typing', [ChatController::class, 'stopTyping']);
 
     Route::post('/chat/upload', [ChatController::class, 'uploadMedia']);
     Route::post('/user/last-seen', [ChatController::class, 'updateLastSeen']);
     Route::post('/conversations/{conversation}/messages/{message}/react', [ChatController::class, 'reactToMessage']);
     Route::delete('/conversations/{conversation}/messages/{message}', [ChatController::class, 'deleteMessage']);
+
     Route::post('/user/block', [ChatController::class, 'blockUser']);
+    Route::delete('/user/block/{id}', [ChatController::class, 'unblockUser']);
+    Route::get('/user/blocks', [ChatController::class, 'blockedUsers']);
     Route::post('/user/report', [ChatController::class, 'reportUser']);
 
     Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
@@ -54,7 +59,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/swipe/remaining', [SubscriptionController::class, 'swipeRemaining']);
     Route::post('/swipe/undo', [SwipeController::class, 'undo']);
     Route::get('/likes-received', [SwipeController::class, 'likesReceived']);
-    // alias
     Route::get('/likes/me', [SwipeController::class, 'likesReceived']);
     Route::post('/profile/boost', [SubscriptionController::class, 'activateBoost']);
     Route::post('/profile/verification-photo', [SubscriptionController::class, 'uploadVerificationPhoto']);
