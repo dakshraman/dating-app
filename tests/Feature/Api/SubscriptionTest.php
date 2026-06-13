@@ -63,6 +63,20 @@ class SubscriptionTest extends TestCase
     public function test_user_can_activate_boost(): void
     {
         $user = User::factory()->create();
+        $plan = SubscriptionPlan::create([
+            'name' => 'Premium',
+            'slug' => 'premium',
+            'price' => 19.99,
+            'duration_days' => 30,
+            'is_active' => true,
+        ]);
+
+        $user->subscription()->create([
+            'subscription_plan_id' => $plan->id,
+            'starts_at' => now(),
+            'ends_at' => now()->addDays(30),
+            'is_active' => true,
+        ]);
 
         $response = $this->actingAs($user)->postJson('/api/profile/boost');
 
@@ -73,11 +87,34 @@ class SubscriptionTest extends TestCase
     public function test_user_cannot_activate_two_boosts(): void
     {
         $user = User::factory()->create();
+        $plan = SubscriptionPlan::create([
+            'name' => 'Premium',
+            'slug' => 'premium',
+            'price' => 19.99,
+            'duration_days' => 30,
+            'is_active' => true,
+        ]);
+
+        $user->subscription()->create([
+            'subscription_plan_id' => $plan->id,
+            'starts_at' => now(),
+            'ends_at' => now()->addDays(30),
+            'is_active' => true,
+        ]);
 
         $this->actingAs($user)->postJson('/api/profile/boost');
         $response = $this->actingAs($user)->postJson('/api/profile/boost');
 
         $response->assertStatus(422);
+    }
+
+    public function test_free_user_cannot_activate_boost(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/profile/boost');
+
+        $response->assertStatus(403);
     }
 
     public function test_user_can_upload_verification_photo(): void

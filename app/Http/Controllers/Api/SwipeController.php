@@ -34,18 +34,6 @@ class SwipeController extends Controller
 
         $isSuperLike = $request->boolean('is_super_like');
 
-        if ($isSuperLike) {
-            $remaining = $user->getRemainingSuperLikes();
-            if ($remaining <= 0) {
-                return response()->json(['message' => 'No super likes remaining'], 429);
-            }
-        } elseif ($request->direction === 'like') {
-            $remaining = $user->getRemainingSwipes();
-            if ($remaining <= 0) {
-                return response()->json(['message' => 'No swipes remaining. Upgrade to Premium!'], 429);
-            }
-        }
-
         $swipe = Swipe::updateOrCreate(
             ['swiper_id' => $user->id, 'swiped_id' => $request->swiped_id],
             [
@@ -106,10 +94,6 @@ class SwipeController extends Controller
     {
         $user = $request->user();
 
-        if (! $user->hasActiveSubscription()) {
-            return response()->json(['message' => 'Premium feature. Upgrade to undo swipes.'], 403);
-        }
-
         $lastSwipe = Swipe::where('swiper_id', $user->id)
             ->latest()
             ->first();
@@ -145,25 +129,6 @@ class SwipeController extends Controller
             ->with('swiper:id,name,profile_photo,bio,birth_date')
             ->latest()
             ->get();
-
-        if (! $user->hasActiveSubscription()) {
-            $totalLikes = $likes->count();
-            $recentLikes = $likes->take(1)->map(function ($swipe) {
-                return [
-                    'id' => $swipe->swiper_id,
-                    'name' => $swipe->swiper->name,
-                    'profile_photo' => $swipe->swiper->profile_photo,
-                    'is_super_like' => $swipe->is_super_like,
-                ];
-            });
-
-            return response()->json([
-                'total_likes' => $totalLikes,
-                'premium_required' => true,
-                'message' => 'Upgrade to Premium to see who liked you',
-                'recent_preview' => $recentLikes,
-            ]);
-        }
 
         return response()->json(
             $likes->map(function ($swipe) {

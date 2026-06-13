@@ -93,6 +93,10 @@ class SubscriptionController extends Controller
     {
         $user = $request->user();
 
+        if (! $user->hasActiveSubscription()) {
+            return response()->json(['message' => 'Subscription required to boost your profile.'], 403);
+        }
+
         if ($user->hasActiveBoost()) {
             return response()->json(['message' => 'Already have an active boost'], 422);
         }

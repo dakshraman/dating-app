@@ -166,32 +166,12 @@ class User extends Authenticatable
 
     public function getRemainingSwipes(): int
     {
-        $limit = DatingSetting::instance()->daily_swipe_limit;
-
-        if ($this->hasActiveSubscription()) {
-            return PHP_INT_MAX;
-        }
-
-        $today = DailySwipeUsage::where('user_id', $this->id)
-            ->whereDate('date', today())
-            ->first();
-
-        return max(0, $limit - ($today?->count ?? 0));
+        return PHP_INT_MAX;
     }
 
     public function getRemainingSuperLikes(): int
     {
-        $limit = DatingSetting::instance()->daily_super_like_limit;
-
-        if ($this->hasActiveSubscription()) {
-            return PHP_INT_MAX;
-        }
-
-        $today = DailySwipeUsage::where('user_id', $this->id)
-            ->whereDate('date', today())
-            ->first();
-
-        return max(0, $limit - ($today?->super_like_count ?? 0));
+        return PHP_INT_MAX;
     }
 
     public function scopeDiscoverable($query, User $user)

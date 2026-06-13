@@ -71,7 +71,7 @@ class SwipeTest extends TestCase
         $response->assertStatus(422);
     }
 
-    public function test_premium_user_can_undo_swipe(): void
+    public function test_user_can_undo_swipe(): void
     {
         $user = User::factory()->create();
         $target = User::factory()->create();
@@ -102,7 +102,7 @@ class SwipeTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_free_user_cannot_undo_swipe(): void
+    public function test_any_user_can_undo_swipe(): void
     {
         $user = User::factory()->create();
         $target = User::factory()->create();
@@ -114,7 +114,7 @@ class SwipeTest extends TestCase
 
         $response = $this->actingAs($user)->postJson('/api/swipe/undo');
 
-        $response->assertStatus(403);
+        $response->assertStatus(200);
     }
 
     public function test_user_can_super_like(): void
