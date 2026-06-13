@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\UserPhotos\Tables;
 
-use Filament\Tables\Actions\BulkAction;
+use Filament\Actions\BulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
