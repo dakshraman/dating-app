@@ -4,36 +4,33 @@ namespace App\Filament\Pages;
 
 use App\Models\DatingSetting;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use UnitEnum;
 
 class DatingSettings extends Page
 {
-    use InteractsWithForms;
-
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
     protected static string|UnitEnum|null $navigationGroup = 'Settings';
-
-    protected string $view = 'filament.pages.dating-settings';
 
     public ?array $data = [];
 
     public function mount(): void
     {
-        $settings = DatingSetting::instance();
-        $this->form->fill($settings->toArray());
+        $this->data = DatingSetting::instance()->toArray();
     }
 
-    public function form(Schema $schema): Schema
+    public function content(Schema $schema): Schema
     {
         return $schema
+            ->statePath('data')
             ->components([
                 Section::make('Swipe Limits')
                     ->columns(2)
@@ -65,16 +62,18 @@ class DatingSettings extends Page
                         Toggle::make('verification_required_for_swiping')
                             ->label('Require verification photo before swiping'),
                     ]),
-            ])
-            ->statePath('data');
+                Actions::make([
+                    Action::make('save')
+                        ->label('Save Settings')
+                        ->action('save'),
+                ]),
+            ]);
     }
 
     public function save(): void
     {
-        $data = $this->form->getState();
-
         $settings = DatingSetting::instance();
-        $settings->update($data);
+        $settings->update($this->data);
 
         cache()->forget('dating_settings');
 
