@@ -193,6 +193,15 @@ class User extends Authenticatable implements FilamentUser
             ->whereNotIn('id', $user->sentSwipes()->pluck('swiped_id'))
             ->when($pref, function ($q) use ($pref) {
                 $q->where('gender', $pref->gender_preference);
+            })
+            ->when($pref?->religion_preference, function ($q) use ($pref) {
+                $q->where('religion', $pref->religion_preference);
+            })
+            ->when($pref?->mother_tongue_preference, function ($q) use ($pref) {
+                $q->where('mother_tongue', $pref->mother_tongue_preference);
+            })
+            ->when($pref?->dietary_preference, function ($q) use ($pref) {
+                $q->where('dietary_preference', $pref->dietary_preference);
             });
     }
 }

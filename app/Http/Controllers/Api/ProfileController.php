@@ -28,6 +28,14 @@ class ProfileController extends Controller
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
             'profile_photo' => 'nullable|string',
+            'state' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'religion' => 'nullable|string|max:255',
+            'mother_tongue' => 'nullable|string|max:255',
+            'dietary_preference' => 'nullable|string|in:Vegetarian,Non-Vegetarian,Eggetarian,Vegan',
+            'education' => 'nullable|string|max:255',
+            'profession' => 'nullable|string|max:255',
+            'income_range' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -37,6 +45,8 @@ class ProfileController extends Controller
         $user->update($request->only([
             'name', 'bio', 'gender', 'birth_date',
             'location', 'latitude', 'longitude', 'profile_photo',
+            'state', 'city', 'religion', 'mother_tongue',
+            'dietary_preference', 'education', 'profession', 'income_range',
         ]));
 
         return response()->json($user->fresh()->load(['photos', 'preferences', 'interests', 'prompts']));
@@ -51,6 +61,9 @@ class ProfileController extends Controller
             'min_age' => 'integer|min:18|max:99',
             'max_age' => 'integer|min:18|max:99',
             'max_distance' => 'integer|min:1|max:500',
+            'religion_preference' => 'nullable|string|max:255',
+            'mother_tongue_preference' => 'nullable|string|max:255',
+            'dietary_preference' => 'nullable|string|in:Vegetarian,Non-Vegetarian,Eggetarian,Vegan',
         ]);
 
         if ($validator->fails()) {
@@ -59,7 +72,10 @@ class ProfileController extends Controller
 
         $preferences = $user->preferences()->updateOrCreate(
             ['user_id' => $user->id],
-            $request->only(['gender_preference', 'min_age', 'max_age', 'max_distance'])
+            $request->only([
+                'gender_preference', 'min_age', 'max_age', 'max_distance',
+                'religion_preference', 'mother_tongue_preference', 'dietary_preference',
+            ])
         );
 
         return response()->json($preferences);
@@ -207,8 +223,16 @@ class ProfileController extends Controller
                 'age' => $profile->age(),
                 'bio' => $profile->bio,
                 'location' => $profile->location,
+                'state' => $profile->state,
+                'city' => $profile->city,
                 'profile_photo' => $profile->profile_photo,
                 'is_verified' => $profile->is_verified,
+                'religion' => $profile->religion,
+                'mother_tongue' => $profile->mother_tongue,
+                'dietary_preference' => $profile->dietary_preference,
+                'education' => $profile->education,
+                'profession' => $profile->profession,
+                'income_range' => $profile->income_range,
                 'photos' => $profile->photos,
                 'interests' => $profile->interests,
                 'prompts' => $profile->prompts,
@@ -248,8 +272,16 @@ class ProfileController extends Controller
             'age' => $profile->age(),
             'bio' => $profile->bio,
             'location' => $profile->location,
+            'state' => $profile->state,
+            'city' => $profile->city,
             'profile_photo' => $profile->profile_photo,
             'is_verified' => $profile->is_verified,
+            'religion' => $profile->religion,
+            'mother_tongue' => $profile->mother_tongue,
+            'dietary_preference' => $profile->dietary_preference,
+            'education' => $profile->education,
+            'profession' => $profile->profession,
+            'income_range' => $profile->income_range,
             'photos' => $profile->photos,
             'interests' => $profile->interests,
             'prompts' => $profile->prompts,

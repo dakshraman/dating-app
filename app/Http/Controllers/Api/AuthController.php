@@ -22,6 +22,14 @@ class AuthController extends Controller
             'phone' => 'nullable|string|unique:users',
             'gender' => 'nullable|string|in:male,female,other',
             'birth_date' => 'nullable|date',
+            'state' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:255',
+            'religion' => 'nullable|string|max:255',
+            'mother_tongue' => 'nullable|string|max:255',
+            'dietary_preference' => 'nullable|string|in:Vegetarian,Non-Vegetarian,Eggetarian,Vegan',
+            'education' => 'nullable|string|max:255',
+            'profession' => 'nullable|string|max:255',
+            'income_range' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -35,6 +43,14 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'gender' => $request->gender,
             'birth_date' => $request->birth_date,
+            'state' => $request->state,
+            'city' => $request->city,
+            'religion' => $request->religion,
+            'mother_tongue' => $request->mother_tongue,
+            'dietary_preference' => $request->dietary_preference,
+            'education' => $request->education,
+            'profession' => $request->profession,
+            'income_range' => $request->income_range,
         ]);
 
         UserPreference::create(['user_id' => $user->id]);

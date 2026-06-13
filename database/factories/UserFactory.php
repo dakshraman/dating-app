@@ -27,6 +27,14 @@ class UserFactory extends Factory
             'latitude' => fake()->latitude(),
             'longitude' => fake()->longitude(),
             'location' => fake()->city(),
+            'state' => fake()->randomElement(['Maharashtra', 'Karnataka', 'Delhi', 'Tamil Nadu', 'Uttar Pradesh', 'Rajasthan', 'Gujarat', 'West Bengal']),
+            'city' => fake()->city(),
+            'religion' => fake()->randomElement(['Hindu', 'Muslim', 'Christian', 'Sikh', 'Buddhist', 'Jain']),
+            'mother_tongue' => fake()->randomElement(['Hindi', 'Tamil', 'Telugu', 'Bengali', 'Marathi', 'Kannada', 'Gujarati']),
+            'dietary_preference' => fake()->randomElement(['Vegetarian', 'Non-Vegetarian', 'Eggetarian', 'Vegan']),
+            'education' => fake()->randomElement(["Bachelor's", "Master's", 'PhD', 'Diploma', 'High School']),
+            'profession' => fake()->randomElement(['Engineer', 'Doctor', 'Teacher', 'Business', 'Designer', 'Student']),
+            'income_range' => fake()->randomElement(['₹0-5L', '₹5-10L', '₹10-20L', '₹20L+']),
         ];
     }
 

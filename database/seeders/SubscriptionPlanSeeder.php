@@ -29,7 +29,7 @@ class SubscriptionPlanSeeder extends Seeder
             'name' => 'Premium',
             'slug' => 'premium',
             'description' => 'Unlimited swipes, super likes, boosts, and more!',
-            'price' => 19.99,
+            'price' => 599.00,
             'duration_days' => 30,
             'features' => [
                 'daily_swipes' => -1,
@@ -45,7 +45,7 @@ class SubscriptionPlanSeeder extends Seeder
             'name' => 'Premium Plus',
             'slug' => 'premium-plus',
             'description' => 'Everything in Premium plus priority visibility',
-            'price' => 34.99,
+            'price' => 999.00,
             'duration_days' => 30,
             'features' => [
                 'daily_swipes' => -1,

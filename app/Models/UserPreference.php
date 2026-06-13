@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserPreference extends Model
 {
-    protected $fillable = ['user_id', 'gender_preference', 'min_age', 'max_age', 'max_distance'];
+    protected $fillable = [
+        'user_id', 'gender_preference', 'min_age', 'max_age', 'max_distance',
+        'religion_preference', 'mother_tongue_preference', 'dietary_preference',
+    ];
 
     public function user()
     {
