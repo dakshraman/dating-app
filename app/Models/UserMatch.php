@@ -8,12 +8,13 @@ class UserMatch extends Model
 {
     protected $table = 'matches';
 
-    protected $fillable = ['user1_id', 'user2_id', 'matched_at'];
+    protected $fillable = ['user1_id', 'user2_id', 'matched_at', 'expires_at'];
 
     protected function casts(): array
     {
         return [
             'matched_at' => 'datetime',
+            'expires_at' => 'datetime',
         ];
     }
 

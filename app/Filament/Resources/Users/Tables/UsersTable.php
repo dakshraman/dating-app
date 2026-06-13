@@ -5,9 +5,11 @@ namespace App\Filament\Resources\Users\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class UsersTable
 {
@@ -46,10 +48,17 @@ class UsersTable
                     ->sortable(),
                 TextColumn::make('profile_photo')
                     ->searchable(),
+                TextColumn::make('verification_photo')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_verified')
                     ->boolean(),
                 IconColumn::make('is_active')
                     ->boolean(),
+                IconColumn::make('is_banned')
+                    ->boolean()
+                    ->color(fn ($state): string => $state ? 'danger' : 'success')
+                    ->label('Banned'),
                 TextColumn::make('last_active_at')
                     ->dateTime()
                     ->sortable(),
@@ -64,6 +73,30 @@ class UsersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('ban')
+                        ->label('Ban selected')
+                        ->icon('heroicon-o-no-symbol')
+                        ->color('danger')
+                        ->action(function (Collection $records): void {
+                            $records->each->update([
+                                'is_banned' => true,
+                                'banned_at' => now(),
+                                'ban_reason' => 'Banned by admin',
+                            ]);
+                        })
+                        ->requiresConfirmation(),
+                    BulkAction::make('unban')
+                        ->label('Unban selected')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->action(function (Collection $records): void {
+                            $records->each->update([
+                                'is_banned' => false,
+                                'banned_at' => null,
+                                'ban_reason' => null,
+                            ]);
+                        })
+                        ->requiresConfirmation(),
                     DeleteBulkAction::make(),
                 ]),
             ]);

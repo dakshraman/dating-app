@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\SwipeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/photos', [ProfileController::class, 'uploadPhoto']);
     Route::delete('/profile/photos/{id}', [ProfileController::class, 'deletePhoto']);
     Route::put('/profile/interests', [ProfileController::class, 'updateInterests']);
+    Route::put('/profile/prompts', [ProfileController::class, 'updatePrompts']);
+    Route::get('/profile/visitors', [ProfileController::class, 'visitors']);
+    Route::delete('/account', [ProfileController::class, 'destroy']);
 
     Route::get('/discover', [ProfileController::class, 'discover']);
     Route::get('/profiles/{id}', [ProfileController::class, 'show']);
@@ -43,6 +47,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/conversations/{conversation}/messages/{message}', [ChatController::class, 'deleteMessage']);
     Route::post('/user/block', [ChatController::class, 'blockUser']);
     Route::post('/user/report', [ChatController::class, 'reportUser']);
+
+    Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
+    Route::get('/subscription/status', [SubscriptionController::class, 'status']);
+    Route::post('/subscription/purchase', [SubscriptionController::class, 'purchase']);
+    Route::get('/swipe/remaining', [SubscriptionController::class, 'swipeRemaining']);
+    Route::post('/swipe/undo', [SwipeController::class, 'undo']);
+    Route::get('/likes-received', [SwipeController::class, 'likesReceived']);
+    // alias
+    Route::get('/likes/me', [SwipeController::class, 'likesReceived']);
+    Route::post('/profile/boost', [SubscriptionController::class, 'activateBoost']);
+    Route::post('/profile/verification-photo', [SubscriptionController::class, 'uploadVerificationPhoto']);
 
     Route::put('/user/fcm-token', function (Request $request) {
         $request->validate(['fcm_token' => 'required|string']);

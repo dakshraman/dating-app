@@ -6,11 +6,12 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_banned', 'ban_reason', 'banned_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -24,6 +25,8 @@ class User extends Authenticatable
             'birth_date' => 'date',
             'is_verified' => 'boolean',
             'is_active' => 'boolean',
+            'is_banned' => 'boolean',
+            'banned_at' => 'datetime',
             'last_active_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'password' => 'hashed',
@@ -98,9 +101,97 @@ class User extends Authenticatable
         return $this->belongsToMany(User::class, 'blocked_users', 'user_id', 'blocked_id');
     }
 
-    public function reports()
+    public function reports(): HasMany
     {
         return $this->hasMany(Report::class, 'reporter_id');
+    }
+
+    public function prompts(): HasMany
+    {
+        return $this->hasMany(ProfilePrompt::class)->orderBy('order');
+    }
+
+    public function visits(): HasMany
+    {
+        return $this->hasMany(ProfileVisit::class, 'visited_id');
+    }
+
+    public function visitors(): HasMany
+    {
+        return $this->hasMany(ProfileVisit::class, 'visited_id');
+    }
+
+    public function compatibilityWith(User $other): int
+    {
+        $myInterests = $this->interests()->pluck('interest_id');
+        $theirInterests = $other->interests()->pluck('interest_id');
+
+        $shared = $myInterests->intersect($theirInterests);
+        $total = $myInterests->union($theirInterests)->count();
+
+        if ($total === 0) {
+            return 0;
+        }
+
+        return (int) round(($shared->count() / $total) * 100);
+    }
+
+    public function subscription(): HasMany
+    {
+        return $this->hasMany(UserSubscription::class)->active()->latest();
+    }
+
+    public function hasActiveSubscription(): bool
+    {
+        return $this->subscription()->exists();
+    }
+
+    public function dailySwipeUsage(): HasMany
+    {
+        return $this->hasMany(DailySwipeUsage::class);
+    }
+
+    public function profileBoosts(): HasMany
+    {
+        return $this->hasMany(ProfileBoost::class);
+    }
+
+    public function hasActiveBoost(): bool
+    {
+        return $this->profileBoosts()->where('is_active', true)
+            ->where('started_at', '<=', now())
+            ->where('expires_at', '>=', now())
+            ->exists();
+    }
+
+    public function getRemainingSwipes(): int
+    {
+        $limit = DatingSetting::instance()->daily_swipe_limit;
+
+        if ($this->hasActiveSubscription()) {
+            return PHP_INT_MAX;
+        }
+
+        $today = DailySwipeUsage::where('user_id', $this->id)
+            ->whereDate('date', today())
+            ->first();
+
+        return max(0, $limit - ($today?->count ?? 0));
+    }
+
+    public function getRemainingSuperLikes(): int
+    {
+        $limit = DatingSetting::instance()->daily_super_like_limit;
+
+        if ($this->hasActiveSubscription()) {
+            return PHP_INT_MAX;
+        }
+
+        $today = DailySwipeUsage::where('user_id', $this->id)
+            ->whereDate('date', today())
+            ->first();
+
+        return max(0, $limit - ($today?->super_like_count ?? 0));
     }
 
     public function scopeDiscoverable($query, User $user)

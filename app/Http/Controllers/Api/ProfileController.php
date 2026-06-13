@@ -3,7 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
 use App\Models\Interest;
+use App\Models\ProfilePrompt;
+use App\Models\ProfileVisit;
+use App\Models\User;
+use App\Models\UserMatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -34,7 +39,7 @@ class ProfileController extends Controller
             'location', 'latitude', 'longitude', 'profile_photo',
         ]));
 
-        return response()->json($user->fresh()->load(['photos', 'preferences', 'interests']));
+        return response()->json($user->fresh()->load(['photos', 'preferences', 'interests', 'prompts']));
     }
 
     public function updatePreferences(Request $request): JsonResponse
@@ -74,6 +79,7 @@ class ProfileController extends Controller
         $photo = $request->user()->photos()->create([
             'photo_url' => $request->photo_url,
             'is_primary' => $request->is_primary ?? false,
+            'is_approved' => false,
             'order' => $request->user()->photos()->count(),
         ]);
 
@@ -118,32 +124,123 @@ class ProfileController extends Controller
         return response()->json($request->user()->interests);
     }
 
+    public function updatePrompts(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'prompts' => 'required|array|max:3',
+            'prompts.*.prompt' => 'required|string|max:200',
+            'prompts.*.answer' => 'required|string|max:200',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $request->user()->prompts()->delete();
+
+        foreach ($request->prompts as $index => $data) {
+            ProfilePrompt::create([
+                'user_id' => $request->user()->id,
+                'prompt' => $data['prompt'],
+                'answer' => $data['answer'],
+                'order' => $index,
+            ]);
+        }
+
+        return response()->json($request->user()->prompts()->get());
+    }
+
+    public function visitors(Request $request): JsonResponse
+    {
+        $visits = ProfileVisit::where('visited_id', $request->user()->id)
+            ->with('visitor:id,name,profile_photo,bio,birth_date')
+            ->latest()
+            ->take(50)
+            ->get()
+            ->map(fn ($visit) => [
+                'id' => $visit->visitor->id,
+                'name' => $visit->visitor->name,
+                'profile_photo' => $visit->visitor->profile_photo,
+                'bio' => $visit->visitor->bio,
+                'age' => $visit->visitor->age(),
+                'visited_at' => $visit->created_at,
+            ]);
+
+        return response()->json($visits);
+    }
+
     public function discover(Request $request): JsonResponse
     {
         $user = $request->user();
-        $profiles = User::discoverable($user)
-            ->with(['photos', 'interests'])
-            ->take(20)
-            ->get()
-            ->map(function ($profile) {
-                return [
-                    'id' => $profile->id,
-                    'name' => $profile->name,
-                    'age' => $profile->age(),
-                    'bio' => $profile->bio,
-                    'location' => $profile->location,
-                    'profile_photo' => $profile->profile_photo,
-                    'photos' => $profile->photos,
-                    'interests' => $profile->interests,
-                ];
-            });
 
-        return response()->json($profiles);
+        $query = User::discoverable($user)
+            ->with(['photos' => fn ($q) => $q->where('is_approved', true), 'interests', 'prompts'])
+            ->withExists(['profileBoosts as is_boosted' => function ($q) {
+                $q->where('is_active', true)
+                    ->where('started_at', '<=', now())
+                    ->where('expires_at', '>=', now());
+            }]);
+
+        $preferences = $user->preferences;
+
+        if ($preferences) {
+            if ($preferences->min_age) {
+                $query->whereRaw("CAST(strftime('%Y', 'now') - strftime('%Y', birth_date) AS INTEGER) >= ?", [$preferences->min_age])
+                    ->whereRaw("CAST(strftime('%Y', 'now') - strftime('%Y', birth_date) AS INTEGER) <= ?", [$preferences->max_age ?? 99]);
+            }
+
+            if ($preferences->max_distance && $user->latitude && $user->longitude) {
+                $haversine = '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))';
+                $query->whereRaw("{$haversine} < ?", [$user->latitude, $user->longitude, $user->latitude, $preferences->max_distance]);
+            }
+        }
+
+        $query->orderByDesc('is_boosted')
+            ->orderByDesc('last_active_at');
+
+        $profiles = $query->cursorPaginate(20);
+
+        $mapped = collect($profiles->items())->map(function ($profile) use ($user) {
+            return [
+                'id' => $profile->id,
+                'name' => $profile->name,
+                'age' => $profile->age(),
+                'bio' => $profile->bio,
+                'location' => $profile->location,
+                'profile_photo' => $profile->profile_photo,
+                'is_verified' => $profile->is_verified,
+                'photos' => $profile->photos,
+                'interests' => $profile->interests,
+                'prompts' => $profile->prompts,
+                'compatibility' => $user->compatibilityWith($profile),
+            ];
+        });
+
+        return response()->json([
+            'data' => $mapped,
+            'next_cursor' => $profiles->nextCursor()?->encode(),
+            'has_more' => $profiles->hasMorePages(),
+        ]);
     }
 
     public function show($id): JsonResponse
     {
-        $profile = User::with(['photos', 'interests'])->findOrFail($id);
+        $profile = User::with([
+            'photos' => fn ($q) => $q->where('is_approved', true),
+            'interests',
+            'prompts',
+        ])->findOrFail($id);
+
+        if (auth()->check() && auth()->id() !== $profile->id) {
+            ProfileVisit::firstOrCreate([
+                'visitor_id' => auth()->id(),
+                'visited_id' => $profile->id,
+            ]);
+        }
+
+        $compatibility = auth()->check()
+            ? auth()->user()->compatibilityWith($profile)
+            : null;
 
         return response()->json([
             'id' => $profile->id,
@@ -152,8 +249,36 @@ class ProfileController extends Controller
             'bio' => $profile->bio,
             'location' => $profile->location,
             'profile_photo' => $profile->profile_photo,
+            'is_verified' => $profile->is_verified,
             'photos' => $profile->photos,
             'interests' => $profile->interests,
+            'prompts' => $profile->prompts,
+            'compatibility' => $compatibility,
         ]);
+    }
+
+    public function destroy(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $user->tokens()->delete();
+        $user->photos()->delete();
+        $user->preferences()->delete();
+        $user->prompts()->delete();
+        $user->sentSwipes()->delete();
+        $user->receivedSwipes()->delete();
+        $user->reports()->delete();
+
+        UserMatch::where('user1_id', $user->id)
+            ->orWhere('user2_id', $user->id)
+            ->delete();
+
+        Conversation::where('user1_id', $user->id)
+            ->orWhere('user2_id', $user->id)
+            ->delete();
+
+        $user->delete();
+
+        return response()->json(['message' => 'Account deleted successfully']);
     }
 }

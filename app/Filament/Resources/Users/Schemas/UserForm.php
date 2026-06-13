@@ -35,10 +35,22 @@ class UserForm
                 TextInput::make('longitude')
                     ->numeric(),
                 TextInput::make('profile_photo'),
-                Toggle::make('is_verified')
-                    ->required(),
-                Toggle::make('is_active')
-                    ->required(),
+                TextInput::make('verification_photo'),
+                Toggle::make('is_verified'),
+                Toggle::make('is_active'),
+                Toggle::make('is_banned')
+                    ->label('Banned')
+                    ->afterStateUpdated(function ($state, $set) {
+                        if ($state) {
+                            $set('banned_at', now()->toDateTimeString());
+                        } else {
+                            $set('banned_at', null);
+                            $set('ban_reason', null);
+                        }
+                    }),
+                DateTimePicker::make('banned_at'),
+                Textarea::make('ban_reason')
+                    ->label('Ban Reason'),
                 DateTimePicker::make('last_active_at'),
                 TextInput::make('phone')
                     ->tel(),
