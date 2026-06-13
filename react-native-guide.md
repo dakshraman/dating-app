@@ -2,16 +2,21 @@
 
 ## API Base URL
 
+**Production:**
 ```
-http://localhost/api
+https://dating.codeloom.co.in/api
 ```
 
-For real devices, replace `localhost` with your machine's local IP (e.g. `http://192.168.x.x:8000/api`).
+**Local development:**
+```
+http://localhost:8000/api
+```
+
+For real devices on local network, replace `localhost` with your machine's local IP (e.g. `http://192.168.x.x:8000/api`).
 
 ## Auth (Sanctum Token)
 
 All authenticated endpoints require a Bearer token header:
-
 ```
 Authorization: Bearer <token>
 ```
@@ -131,6 +136,8 @@ Pass the ID token from Google Sign-In on the client:
   "max_age": 40,
   "max_distance": 100
 }
+// Response 200 — returns the UserPreference model
+{ "id": 1, "user_id": 1, "gender_preference": "female", "min_age": 20, "max_age": 40, "max_distance": 100, "created_at": "...", "updated_at": "..." }
 ```
 
 ### Add Photo
@@ -138,12 +145,22 @@ Pass the ID token from Google Sign-In on the client:
 // POST /api/profile/photos
 { "photo_url": "https://...", "is_primary": true }
 // Response 201
+{ "id": 1, "user_id": 1, "photo_url": "https://...", "is_primary": true, "is_approved": false, "order": 0, "created_at": "...", "updated_at": "..." }
+```
+
+### Delete Photo
+```json
+// DELETE /api/profile/photos/{id}
+// Response 200
+{ "message": "Photo deleted" }
 ```
 
 ### Update Interests
 ```json
 // PUT /api/profile/interests
 { "interests": ["music", "travel", "photography"] }
+// Response 200 — returns array of Interest models
+[ { "id": 1, "name": "music", "created_at": "...", "updated_at": "..." } ]
 ```
 
 ### Update Prompts
@@ -156,13 +173,13 @@ Pass the ID token from Google Sign-In on the client:
     { "prompt": "Best travel story", "answer": "Got lost in Tokyo" }
   ]
 }
-// Max 3 prompts
+// Max 3 prompts. Response 200 — returns array of ProfilePrompt models
 ```
 
 ### Profile Visitors
 ```json
 // GET /api/profile/visitors
-// Response 200 — array
+// Response 200 — array (max 50 most recent)
 [
   { "id": 2, "name": "Jane", "profile_photo": "https://...", "bio": "...", "age": 28, "visited_at": "2026-06-13T..." }
 ]
@@ -190,7 +207,8 @@ Pass the ID token from Google Sign-In on the client:
 ### Delete Account
 ```json
 // DELETE /api/account
-// Response 200 — user and all data permanently deleted
+// Response 200 — user and all associated data permanently deleted
+{ "message": "Account deleted successfully" }
 ```
 
 ## Discover Feed
@@ -219,7 +237,7 @@ Pass the ID token from Google Sign-In on the client:
 }
 ```
 
-Cursor pagination — pass `next_cursor` value as `?cursor=` param for next page. 20 profiles per page. Boosted profiles appear first.
+Cursor pagination — pass `next_cursor` value as `?cursor=` param for next page. 20 profiles per page. Boosted profiles appear first. Filters by age and distance from your preferences.
 
 ## Swipe & Match
 
@@ -239,9 +257,10 @@ Cursor pagination — pass `next_cursor` value as `?cursor=` param for next page
 { "swiped_id": 2, "direction": "like" }
 // or super like:
 { "swiped_id": 2, "direction": "like", "is_super_like": true }
+// directions: "like" or "nope"
 
 // Response 200 — no match
-{ "swipe": { "id": 1, "direction": "like", "is_super_like": false }, "matched": false, "match": null }
+{ "swipe": { "id": 1, "swiper_id": 1, "swiped_id": 2, "direction": "like", "is_super_like": false, "created_at": "...", "updated_at": "..." }, "matched": false, "match": null }
 
 // Response 200 — mutual match!
 { "swipe": { ... }, "matched": true, "match": { "id": 1, "user1_id": 1, "user2_id": 2, "matched_at": "..." } }
@@ -251,12 +270,15 @@ Cursor pagination — pass `next_cursor` value as `?cursor=` param for next page
 ```json
 // POST /api/swipe/undo
 // Response 200 — swipe deleted, usage count restored
+{ "message": "Last swipe undone" }
+// Response 404 — no swipe to undo
+{ "message": "No swipe to undo" }
 ```
 
 ### Matches
 ```json
 // GET /api/matches
-// Response 200
+// Response 200 — ordered by matched_at desc
 [
   {
     "id": 1,
@@ -269,7 +291,7 @@ Cursor pagination — pass `next_cursor` value as `?cursor=` param for next page
 
 ### Likes Received
 ```json
-// GET /api/likes-received
+// GET /api/likes-received (or /api/likes/me)
 // Response 200
 [
   {
@@ -291,7 +313,7 @@ Cursor pagination — pass `next_cursor` value as `?cursor=` param for next page
 { "remaining_swipes": 999999999, "remaining_super_likes": 999999999, "is_premium": false }
 ```
 
-All features are free. Boost activation requires a subscription.
+Free users get limited daily swipes. Subscribed users get unlimited.
 
 ## Chat / Messaging
 
@@ -304,7 +326,7 @@ All features are free. Boost activation requires a subscription.
 | POST | `/api/conversations/{id}/typing` | Send typing indicator |
 | POST | `/api/chat/upload` | Upload image/voice file |
 | POST | `/api/conversations/{id}/messages/{msg}/react` | React to message |
-| DELETE | `/api/conversations/{id}/messages/{msg}` | Delete a message |
+| DELETE | `/api/conversations/{id}/messages/{msg}` | Delete own message |
 | POST | `/api/user/block` | Block a user |
 | POST | `/api/user/report` | Report a user |
 | POST | `/api/user/last-seen` | Update last seen timestamp |
@@ -312,7 +334,7 @@ All features are free. Boost activation requires a subscription.
 ### Conversations
 ```json
 // GET /api/conversations
-// Response 200
+// Response 200 — ordered by last_message_at desc
 [
   {
     "id": 1,
@@ -325,30 +347,10 @@ All features are free. Boost activation requires a subscription.
 ]
 ```
 
-### Send Message
-```json
-// POST /api/conversations/1/messages
-{ "content": "Hello!", "type": "text", "reply_to_id": null, "metadata": {} }
-// Response 201
-{
-  "id": 6,
-  "conversation_id": 1,
-  "sender_id": 1,
-  "content": "Hello!",
-  "type": "text",
-  "status": "sent",
-  "metadata": null,
-  "read_at": null,
-  "created_at": "...",
-  "reply_to": null,
-  "sender": { "id": 1, "name": "John", "profile_photo": "https://..." }
-}
-```
-
 ### Get Messages
 ```json
 // GET /api/conversations/1/messages?before=50&limit=50
-// Response 200 — array (not wrapped in data)
+// Response 200 — array (not wrapped in data), ordered by created_at asc
 [
   {
     "id": 1,
@@ -365,6 +367,35 @@ All features are free. Boost activation requires a subscription.
   }
 ]
 ```
+- `before`: optional message ID for older messages (cursor pagination)
+- `limit`: optional (default 50, max 100)
+- Unread messages are automatically marked as delivered (broadcasts `MessageDelivered`)
+
+### Send Message
+```json
+// POST /api/conversations/1/messages
+{
+  "content": "Hello!",
+  "type": "text",
+  "reply_to_id": null,
+  "metadata": {}
+}
+// types: "text", "image", "voice"
+// Response 201
+{
+  "id": 6,
+  "conversation_id": 1,
+  "sender_id": 1,
+  "content": "Hello!",
+  "type": "text",
+  "status": "sent",
+  "metadata": null,
+  "read_at": null,
+  "created_at": "...",
+  "reply_to": null,
+  "sender": { "id": 1, "name": "John", "profile_photo": "https://..." }
+}
+```
 
 ### Mark as Read
 ```json
@@ -377,48 +408,59 @@ All features are free. Boost activation requires a subscription.
 ```json
 // POST /api/conversations/1/typing
 // Response 200 — broadcasts to WebSocket channel
-```
-
-### Upload Media
-```json
-// POST /api/chat/upload (multipart/form-data)
-// file: (binary), type: "image" | "voice" | "video"
-// Response 201
-{ "url": "http://localhost/storage/chat-media/abc123.jpg", "type": "image" }
-```
-
-### Block User
-```json
-// POST /api/user/block
-{ "user_id": 2 }
-```
-
-### Report User
-```json
-// POST /api/user/report
-{ "user_id": 2, "reason": "Inappropriate behavior" }
-```
-
-### Last Seen
-```json
-// POST /api/user/last-seen
-// Response 200
+{ "message": "Typing indicator sent" }
 ```
 
 ### React to Message
 ```json
 // POST /api/conversations/1/messages/5/react
 { "metadata": { "emoji": "❤️" } }
+// Response 200
+{ "message": "Reaction updated" }
 ```
 
 ### Delete Message
 ```json
 // DELETE /api/conversations/1/messages/5
+// Response 200 — only the sender can delete
+{ "message": "Deleted" }
+```
+
+### Upload Media
+```json
+// POST /api/chat/upload (multipart/form-data)
+// file: (binary), type: "image" | "voice" | "video"
+// Accepted formats: jpeg, png, jpg, gif, mp3, ogg, wav, mp4 (max 50MB)
+// Response 201
+{ "url": "https://dating.codeloom.co.in/storage/chat-media/abc123.jpg", "type": "image" }
+```
+
+### Block User
+```json
+// POST /api/user/block
+{ "user_id": 2 }
+// Response 200
+{ "message": "User blocked" }
+```
+
+### Report User
+```json
+// POST /api/user/report
+{ "user_id": 2 }
+// Response 200
+{ "message": "Report submitted" }
+```
+
+### Last Seen
+```json
+// POST /api/user/last-seen
+// Response 200
+{ "message": "Updated" }
 ```
 
 ## Real-Time Chat (Laravel Reverb)
 
-Reverb uses the **Pusher protocol**, so use a Pusher-compatible client on React Native.
+The app uses **Laravel Reverb** (Pusher protocol) for real-time features. Use a Pusher-compatible WebSocket client on React Native.
 
 ### Client Setup
 
@@ -431,14 +473,19 @@ npm install pusher-js
 ```javascript
 import Pusher from 'pusher-js/react-native';
 
-const pusher = new Pusher('2gjhksblzm5x0iml1gsj', {
-  cluster: '',           // leave empty — using custom host
-  wsHost: 'localhost',   // your backend IP in production
-  wsPort: 8080,
-  wssPort: 8080,         // same as wsPort unless TLS is set up
-  forceTLS: false,
-  enabledTransports: ['ws', 'wss'],
+const pusher = new Pusher('reverb:766f7eb95753e16bd9513a3e57d9782a', {
+  wsHost: 'dating.codeloom.co.in',
+  wsPort: 443,
+  wssPort: 443,
+  forceTLS: true,
+  enabledTransports: ['wss'],
   disableStats: true,
+  authEndpoint: 'https://dating.codeloom.co.in/api/broadcasting/auth',
+  auth: {
+    headers: {
+      Authorization: 'Bearer YOUR_SANCTUM_TOKEN',
+    },
+  },
 });
 ```
 
@@ -475,17 +522,36 @@ channel.bind('App\\Events\\MessageDelivered', (data) => {
 });
 ```
 
-> **Authentication**: Private channels require a POST to `/broadcasting/auth` with the Sanctum Bearer token. The `pusher-js` library handles this automatically when you configure the `authEndpoint`:
+**Private channel auth** — the `pusher-js` library automatically calls `authEndpoint` (POST to `https://dating.codeloom.co.in/api/broadcasting/auth`) with the Sanctum Bearer token. No manual auth calls needed.
 
-```javascript
-const pusher = new Pusher('2gjhksblzm5x0iml1gsj', {
-  authEndpoint: 'http://localhost/api/broadcasting/auth',
-  auth: {
-    headers: { Authorization: `Bearer ${token}` },
-  },
-  // ... other options
-});
+### Available Channels
+
+| Channel | Purpose |
+|---------|---------|
+| `private-user.{userId}` | All events for a user (messages, matches, typing) |
+| `private-conversation.{conversationId}` | Conversation-specific events (exposed but user channel is preferred) |
+| `private-App.Models.User.{id}` | Model-level user channel |
+
+### Events emitted by the server
+
+| Event | Channel | Payload |
+|-------|---------|---------|
+| `App\\Events\\MessageSent` | `private-user.{recipientId}` | `{ message: { ...full message object } }` |
+| `App\\Events\\MessageRead` | `private-user.{senderId}` | `{ conversation_id, user_id, last_read_message_id }` |
+| `App\\Events\\TypingIndicator` | `private-user.{recipientId}` | `{ conversation_id, user_id, userName }` |
+| `App\\Events\\NewMatch` | `private-user.{userId}` | `{ match: { ...match object } }` |
+| `App\\Events\\MessageDelivered` | `private-user.{senderId}` | `{ conversation_id, message_id, user_id }` |
+
+All events are broadcast **to others** only (not to the sender).
+
+### WebSocket Infrastructure
+
+WebSocket connections go through:
 ```
+wss://dating.codeloom.co.in/app/<pusher-app-key>
+```
+
+The nginx server proxies `/app/` requests to the Reverb server running on `127.0.0.1:8091`. The WebSocket is managed by Supervisor (auto-restarts on crash).
 
 ## Push Notifications (FCM)
 
@@ -493,11 +559,13 @@ const pusher = new Pusher('2gjhksblzm5x0iml1gsj', {
 ```json
 // PUT /api/user/fcm-token
 { "fcm_token": "firebase-device-token-here" }
+// Response 200
 ```
 
 ### Remove Token
 ```
 // DELETE /api/user/fcm-token/{token}
+// Response 200
 ```
 
 The backend sends FCM notifications for new messages when the recipient is offline. The `fcm_tokens` field on the user model stores an array of tokens.
@@ -507,7 +575,7 @@ The backend sends FCM notifications for new messages when the recipient is offli
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/subscription/plans` | Available plans |
-| GET | `/api/subscription/status` | Current subscription |
+| GET | `/api/subscription/status` | Current subscription + daily limits |
 | POST | `/api/subscription/purchase` | Purchase a plan |
 | POST | `/api/profile/boost` | Activate profile boost (requires subscription) |
 | POST | `/api/profile/verification-photo` | Upload verification photo |
@@ -529,27 +597,50 @@ The backend sends FCM notifications for new messages when the recipient is offli
 ]
 ```
 
+### Subscription Status
+```json
+// GET /api/subscription/status
+// Response 200
+{
+  "has_subscription": true,
+  "subscription": {
+    "plan": "Premium",
+    "ends_at": "2026-07-13T..."
+  },
+  "remaining_swipes": 999,
+  "remaining_super_likes": 5,
+  "has_active_boost": false
+}
+```
+
 ### Purchase
 ```json
 // POST /api/subscription/purchase
 { "plan_id": 1 }
 // Response 200
-{ "message": "Subscription activated", "subscription": { ... } }
+{
+  "message": "Subscription activated",
+  "subscription": { "id": 1, "user_id": 1, "subscription_plan_id": 1, "starts_at": "...", "ends_at": "...", "is_active": true, "plan": { "id": 1, "name": "Premium", "slug": "premium", "price": 19.99, "duration_days": 30 } }
+}
 ```
 
 ### Activate Boost (requires subscription)
 ```json
 // POST /api/profile/boost
 // Response 200
-{ "message": "Boost activated", "boost": { "is_active": true, "expires_at": "..." } }
+{ "message": "Boost activated", "boost": { "id": 1, "user_id": 1, "started_at": "...", "expires_at": "...", "is_active": true } }
 // Response 403 without active subscription
 { "message": "Subscription required to boost your profile." }
+// Response 422 if boost already active
+{ "message": "Already have an active boost" }
 ```
 
 ### Upload Verification Photo
 ```json
 // POST /api/profile/verification-photo
 { "photo": "https://..." }
+// Response 200
+{ "message": "Verification photo uploaded. Pending admin review." }
 ```
 
 ## Error Handling
@@ -566,8 +657,11 @@ All endpoints return consistent errors:
 // Not found (404)
 { "message": "No query results for model [User] 1" }
 
-// Banned user (403) — applies to ALL API routes
+// Banned user (403) — applies to ALL authenticated routes
 { "message": "Your account has been banned.", "reason": "Spam" }
+
+// Forbidden (403)
+{ "message": "Forbidden" }
 ```
 
 ### HTTP Status Codes Used
@@ -577,7 +671,7 @@ All endpoints return consistent errors:
 | 200 | Success |
 | 201 | Created (register, send message, upload) |
 | 401 | Unauthenticated |
-| 403 | Forbidden (banned, boost requires sub) |
+| 403 | Forbidden (banned, boost requires sub, not a participant) |
 | 404 | Not found |
 | 422 | Validation error |
 | 429 | Rate limited |
@@ -596,3 +690,13 @@ php artisan db:seed --class=SubscriptionPlanSeeder
 php artisan serve          # API at http://localhost:8000
 php artisan reverb:start   # WebSocket at port 8080
 ```
+
+### Production URLs Quick Reference
+
+| Service | URL |
+|---------|-----|
+| API Base | `https://dating.codeloom.co.in/api` |
+| WebSocket | `wss://dating.codeloom.co.in/app/APP_KEY` |
+| Pusher App Key | `reverb:766f7eb95753e16bd9513a3e57d9782a` |
+| Auth Endpoint | `https://dating.codeloom.co.in/api/broadcasting/auth` |
+| Media Storage | `https://dating.codeloom.co.in/storage/chat-media/...` |
