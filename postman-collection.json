@@ -1,0 +1,913 @@
+{
+  "info": {
+    "name": "Dating App API",
+    "description": "Full API collection for Dating App at https://dating.codeloom.co.in\n\n## Auth\nAll authenticated endpoints require a Bearer token:\n```\nAuthorization: Bearer <token>\n```\n\n## Base URL\n`https://dating.codeloom.co.in/api`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "dating-app"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://dating.codeloom.co.in/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_SANCTUM_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "targetUserId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "conversationId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "messageId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "matchId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "photoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "planId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "fcmToken",
+      "value": "firebase-device-token-here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"phone\": \"1234567890\",\n  \"gender\": \"male\",\n  \"birth_date\": \"1995-01-01\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": ["{{base_url}}"],
+              "path": ["register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            }
+          }
+        },
+        {
+          "name": "Google OAuth (Mobile)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"...\",\n  \"email\": \"user@gmail.com\",\n  \"name\": \"John\",\n  \"avatar\": \"https://...\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/google/mobile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google", "mobile"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user",
+              "host": ["{{base_url}}"],
+              "path": ["user"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/logout",
+              "host": ["{{base_url}}"],
+              "path": ["logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"bio\": \"New bio here\",\n  \"location\": \"Mumbai\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.8777,\n  \"profile_photo\": \"https://example.com/photo.jpg\",\n  \"state\": \"Maharashtra\",\n  \"city\": \"Mumbai\",\n  \"religion\": \"Hindu\",\n  \"mother_tongue\": \"Hindi\",\n  \"education\": \"Bachelor's\",\n  \"profession\": \"Engineer\",\n  \"income_range\": \"10-15 LPA\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile",
+              "host": ["{{base_url}}"],
+              "path": ["profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gender_preference\": \"female\",\n  \"min_age\": 20,\n  \"max_age\": 40,\n  \"max_distance\": 100,\n  \"religion_preference\": \"Hindu\",\n  \"mother_tongue_preference\": \"Hindi\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/preferences",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "preferences"]
+            }
+          }
+        },
+        {
+          "name": "Add Photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo_url\": \"https://example.com/photo.jpg\",\n  \"is_primary\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/photos",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "photos"]
+            }
+          }
+        },
+        {
+          "name": "Delete Photo",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile/photos/{{photoId}}",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "photos", "{{photoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Interests",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"interests\": [\"music\", \"travel\", \"photography\", \"cooking\", \"hiking\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/interests",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "interests"]
+            }
+          }
+        },
+        {
+          "name": "Update Prompts",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompts\": [\n    { \"prompt\": \"My ideal weekend\", \"answer\": \"Hiking and coffee\" },\n    { \"prompt\": \"Two truths and a lie\", \"answer\": \"I speak 3 languages\" },\n    { \"prompt\": \"Best travel story\", \"answer\": \"Got lost in Tokyo\" }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/prompts",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "prompts"]
+            }
+          }
+        },
+        {
+          "name": "Profile Visitors",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile/visitors",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "visitors"]
+            }
+          }
+        },
+        {
+          "name": "View Profile (other user)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/{{targetUserId}}",
+              "host": ["{{base_url}}"],
+              "path": ["profiles", "{{targetUserId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/account",
+              "host": ["{{base_url}}"],
+              "path": ["account"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discover",
+      "item": [
+        {
+          "name": "Discover Profiles",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/discover?cursor={{cursor}}",
+              "host": ["{{base_url}}"],
+              "path": ["discover"],
+              "query": [
+                { "key": "cursor", "value": "{{cursor}}", "description": "Optional: cursor from previous response for pagination" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Swipe & Match",
+      "item": [
+        {
+          "name": "Swipe (Like / Nope)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"swiped_id\": {{targetUserId}},\n  \"direction\": \"like\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/swipe",
+              "host": ["{{base_url}}"],
+              "path": ["swipe"]
+            }
+          }
+        },
+        {
+          "name": "Super Like",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"swiped_id\": {{targetUserId}},\n  \"direction\": \"like\",\n  \"is_super_like\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/swipe",
+              "host": ["{{base_url}}"],
+              "path": ["swipe"]
+            }
+          }
+        },
+        {
+          "name": "Undo Last Swipe",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/swipe/undo",
+              "host": ["{{base_url}}"],
+              "path": ["swipe", "undo"]
+            }
+          }
+        },
+        {
+          "name": "Get Matches",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches",
+              "host": ["{{base_url}}"],
+              "path": ["matches"]
+            }
+          }
+        },
+        {
+          "name": "Unmatch",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches/{{matchId}}",
+              "host": ["{{base_url}}"],
+              "path": ["matches", "{{matchId}}"]
+            }
+          }
+        },
+        {
+          "name": "Likes Received",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/likes-received",
+              "host": ["{{base_url}}"],
+              "path": ["likes-received"]
+            }
+          }
+        },
+        {
+          "name": "Likes/Me (alias)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/likes/me",
+              "host": ["{{base_url}}"],
+              "path": ["likes", "me"]
+            }
+          }
+        },
+        {
+          "name": "Swipe Remaining",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/swipe/remaining",
+              "host": ["{{base_url}}"],
+              "path": ["swipe", "remaining"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "List Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/conversations",
+              "host": ["{{base_url}}"],
+              "path": ["conversations"]
+            }
+          }
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/messages?before=&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "messages"],
+              "query": [
+                { "key": "before", "value": "", "description": "Message ID for cursor pagination (older messages)" },
+                { "key": "limit", "value": "50", "description": "Max messages (default 50, max 100)" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello!\",\n  \"type\": \"text\",\n  \"reply_to_id\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Send Image Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"https://example.com/image.jpg\",\n  \"type\": \"image\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/messages",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "messages"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/read",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "read"]
+            }
+          }
+        },
+        {
+          "name": "Typing Indicator",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/typing",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "typing"]
+            }
+          }
+        },
+        {
+          "name": "React to Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metadata\": {\n    \"emoji\": \"❤️\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/messages/{{messageId}}/react",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "messages", "{{messageId}}", "react"]
+            }
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/messages/{{messageId}}",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "messages", "{{messageId}}"]
+            }
+          }
+        },
+        {
+          "name": "Upload Chat Media",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "type", "value": "image" }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/chat/upload",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Delete Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Moderation",
+      "item": [
+        {
+          "name": "Block User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": {{targetUserId}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/user/block",
+              "host": ["{{base_url}}"],
+              "path": ["user", "block"]
+            }
+          }
+        },
+        {
+          "name": "Unblock User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/block/{{targetUserId}}",
+              "host": ["{{base_url}}"],
+              "path": ["user", "block", "{{targetUserId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Blocked Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/blocks",
+              "host": ["{{base_url}}"],
+              "path": ["user", "blocks"]
+            }
+          }
+        },
+        {
+          "name": "Report User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": {{targetUserId}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/user/report",
+              "host": ["{{base_url}}"],
+              "path": ["user", "report"]
+            }
+          }
+        },
+        {
+          "name": "Update Last Seen",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/last-seen",
+              "host": ["{{base_url}}"],
+              "path": ["user", "last-seen"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Push Notifications",
+      "item": [
+        {
+          "name": "Register FCM Token",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcm_token\": \"{{fcmToken}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/user/fcm-token",
+              "host": ["{{base_url}}"],
+              "path": ["user", "fcm-token"]
+            }
+          }
+        },
+        {
+          "name": "Remove FCM Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/fcm-token/{{fcmToken}}",
+              "host": ["{{base_url}}"],
+              "path": ["user", "fcm-token", "{{fcmToken}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Get Plans",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscription/plans",
+              "host": ["{{base_url}}"],
+              "path": ["subscription", "plans"]
+            }
+          }
+        },
+        {
+          "name": "Subscription Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/subscription/status",
+              "host": ["{{base_url}}"],
+              "path": ["subscription", "status"]
+            }
+          }
+        },
+        {
+          "name": "Purchase Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan_id\": {{planId}}\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/subscription/purchase",
+              "host": ["{{base_url}}"],
+              "path": ["subscription", "purchase"]
+            }
+          }
+        },
+        {
+          "name": "Activate Profile Boost",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile/boost",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "boost"]
+            }
+          }
+        },
+        {
+          "name": "Upload Verification Photo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo\": \"https://example.com/verification-photo.jpg\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/profile/verification-photo",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "verification-photo"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Error Examples",
+      "item": [
+        {
+          "name": "401 Unauthenticated",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/user",
+              "host": ["{{base_url}}"],
+              "path": ["user"]
+            }
+          }
+        },
+        {
+          "name": "422 Validation Error",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"short\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/register",
+              "host": ["{{base_url}}"],
+              "path": ["register"]
+            }
+          }
+        },
+        {
+          "name": "422 Cannot Swipe Self",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"swiped_id\": {{userId}},\n  \"direction\": \"like\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/swipe",
+              "host": ["{{base_url}}"],
+              "path": ["swipe"]
+            }
+          }
+        },
+        {
+          "name": "403 Free User Boost",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profile/boost",
+              "host": ["{{base_url}}"],
+              "path": ["profile", "boost"]
+            }
+          }
+        },
+        {
+          "name": "404 Not Found",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/99999",
+              "host": ["{{base_url}}"],
+              "path": ["profiles", "99999"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

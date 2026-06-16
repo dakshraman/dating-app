@@ -137,7 +137,7 @@ class ProfileController extends Controller
 
         $request->user()->interests()->sync($interestIds);
 
-        return response()->json($request->user()->interests);
+        return response()->json($request->user()->interests()->get());
     }
 
     public function updatePrompts(Request $request): JsonResponse
