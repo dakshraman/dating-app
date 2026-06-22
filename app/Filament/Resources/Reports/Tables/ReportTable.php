@@ -20,6 +20,9 @@ class ReportTable
                 TextColumn::make('reason')
                     ->limit(60)
                     ->searchable(),
+                TextColumn::make('details')
+                    ->limit(60)
+                    ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),

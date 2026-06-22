@@ -20,6 +20,8 @@ class ReportForm
                     ->required(),
                 Textarea::make('reason')
                     ->columnSpanFull(),
+                Textarea::make('details')
+                    ->columnSpanFull(),
             ]);
     }
 }

@@ -323,8 +323,10 @@ class ChatController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $request->validate(['metadata' => 'required|array']);
-        $message->update(['metadata' => $request->metadata]);
+        $request->validate(['emoji' => 'required|string']);
+        $metadata = $message->metadata ?? [];
+        $metadata['emoji'] = $request->emoji;
+        $message->update(['metadata' => $metadata]);
 
         return response()->json(['message' => 'Reaction updated']);
     }
@@ -344,9 +346,9 @@ class ChatController extends Controller
 
     public function blockUser(Request $request): JsonResponse
     {
-        $request->validate(['user_id' => 'required|exists:users,id']);
+        $request->validate(['blocked_id' => 'required|exists:users,id']);
 
-        $userId = $request->integer('user_id');
+        $userId = $request->integer('blocked_id');
 
         if ($request->user()->id === $userId) {
             return response()->json(['message' => 'Cannot block yourself'], 422);
@@ -374,10 +376,16 @@ class ChatController extends Controller
 
     public function reportUser(Request $request): JsonResponse
     {
-        $request->validate(['user_id' => 'required|exists:users,id']);
+        $request->validate([
+            'reported_id' => 'required|exists:users,id',
+            'reason' => 'required|string',
+            'details' => 'nullable|string',
+        ]);
 
         $request->user()->reports()->create([
-            'reported_id' => $request->integer('user_id'),
+            'reported_id' => $request->integer('reported_id'),
+            'reason' => $request->input('reason'),
+            'details' => $request->input('details'),
         ]);
 
         return response()->json(['message' => 'Report submitted']);
