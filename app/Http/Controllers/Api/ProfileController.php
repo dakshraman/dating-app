@@ -116,6 +116,11 @@ class ProfileController extends Controller
         return response()->json(['message' => 'Photo deleted']);
     }
 
+    public function getInterests(): JsonResponse
+    {
+        return response()->json(Interest::orderBy('name')->get());
+    }
+
     public function updateInterests(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [

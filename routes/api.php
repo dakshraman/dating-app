@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile/preferences', [ProfileController::class, 'updatePreferences']);
     Route::post('/profile/photos', [ProfileController::class, 'uploadPhoto']);
     Route::delete('/profile/photos/{id}', [ProfileController::class, 'deletePhoto']);
+    Route::get('/interests', [ProfileController::class, 'getInterests']);
     Route::put('/profile/interests', [ProfileController::class, 'updateInterests']);
     Route::put('/profile/prompts', [ProfileController::class, 'updatePrompts']);
     Route::get('/profile/visitors', [ProfileController::class, 'visitors']);
