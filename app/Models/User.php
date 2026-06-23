@@ -191,16 +191,16 @@ class User extends Authenticatable implements FilamentUser
             ->whereNotNull('gender')
             ->whereNotNull('profile_photo')
             ->whereNotIn('id', $user->sentSwipes()->pluck('swiped_id'))
-            ->when($pref?->gender_preference && strtolower($pref->gender_preference) !== 'any', function ($q) use ($pref) {
+            ->when($pref, function ($q) use ($pref) {
                 $q->where('gender', $pref->gender_preference);
             })
-            ->when($pref?->religion_preference && strtolower($pref->religion_preference) !== 'any', function ($q) use ($pref) {
+            ->when($pref?->religion_preference, function ($q) use ($pref) {
                 $q->where('religion', $pref->religion_preference);
             })
-            ->when($pref?->mother_tongue_preference && strtolower($pref->mother_tongue_preference) !== 'any', function ($q) use ($pref) {
+            ->when($pref?->mother_tongue_preference, function ($q) use ($pref) {
                 $q->where('mother_tongue', $pref->mother_tongue_preference);
             })
-            ->when($pref?->dietary_preference && strtolower($pref->dietary_preference) !== 'any', function ($q) use ($pref) {
+            ->when($pref?->dietary_preference, function ($q) use ($pref) {
                 $q->where('dietary_preference', $pref->dietary_preference);
             });
     }
