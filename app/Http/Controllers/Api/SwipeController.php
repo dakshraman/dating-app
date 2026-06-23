@@ -188,4 +188,51 @@ class SwipeController extends Controller
 
         return response()->json(['message' => 'Unmatched']);
     }
+    public function likesSent(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $likes = Swipe::where('swiper_id', $user->id)
+            ->where('direction', 'like')
+            ->whereNotExists(function ($query) use ($user) {
+                $query->select(\Illuminate\Support\Facades\DB::raw(1))
+                    ->from('user_matches')
+                    ->where(function ($q) use ($user) {
+                        $q->where('user1_id', $user->id)
+                          ->whereColumn('user2_id', 'swipes.swiped_id');
+                    })
+                    ->orWhere(function ($q) use ($user) {
+                        $q->where('user2_id', $user->id)
+                          ->whereColumn('user1_id', 'swipes.swiped_id');
+                    });
+            })
+            ->with('swiped:id,name,profile_photo,bio,birth_date')
+            ->latest()
+            ->get();
+
+        return response()->json(
+            $likes->map(function ($swipe) {
+                return [
+                    'id' => $swipe->swiped_id,
+                    'name' => $swipe->swiped->name,
+                    'profile_photo' => $swipe->swiped->profile_photo,
+                    'bio' => $swipe->swiped->bio,
+                    'age' => $swipe->swiped->age(),
+                    'is_super_like' => $swipe->is_super_like,
+                    'swiped_at' => $swipe->created_at,
+                ];
+            })
+        );
+    }
+
+    public function destroySwipe(Request $request, $swiped_id): JsonResponse
+    {
+        $swipe = Swipe::where('swiper_id', $request->user()->id)
+            ->where('swiped_id', $swiped_id)
+            ->firstOrFail();
+
+        $swipe->delete();
+
+        return response()->json(['message' => 'Like withdrawn']);
+    }
 }

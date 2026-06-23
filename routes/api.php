@@ -60,6 +60,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/swipe/undo', [SwipeController::class, 'undo']);
     Route::get('/likes-received', [SwipeController::class, 'likesReceived']);
     Route::get('/likes/me', [SwipeController::class, 'likesReceived']);
+    Route::get('/likes-sent', [SwipeController::class, 'likesSent']);
+    Route::delete('/likes-sent/{swiped_id}', [SwipeController::class, 'destroySwipe']);
     Route::post('/profile/boost', [SubscriptionController::class, 'activateBoost']);
     Route::post('/profile/verification-photo', [SubscriptionController::class, 'uploadVerificationPhoto']);
 
