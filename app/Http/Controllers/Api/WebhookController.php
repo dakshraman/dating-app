@@ -15,28 +15,29 @@ class WebhookController extends Controller
     {
         // Ideally verify a webhook secret from RevenueCat in headers
         $event = $request->input('event');
-        
-        if (!$event) {
+
+        if (! $event) {
             return response()->json(['message' => 'No event payload'], 400);
         }
 
         $type = $event['type'] ?? '';
         $appUserId = $event['app_user_id'] ?? null;
         $expirationAtMs = $event['expiration_at_ms'] ?? null;
-        
-        if (!$appUserId) {
+
+        if (! $appUserId) {
             return response()->json(['message' => 'Missing app_user_id'], 400);
         }
 
         $user = User::find($appUserId);
-        if (!$user) {
+        if (! $user) {
             Log::warning("RevenueCat webhook: User $appUserId not found.");
+
             return response()->json(['message' => 'User not found'], 404);
         }
 
         // We assume 'Premium' entitlement or just any subscription triggers this
-        $expirationDate = $expirationAtMs 
-            ? Carbon::createFromTimestampMs($expirationAtMs) 
+        $expirationDate = $expirationAtMs
+            ? Carbon::createFromTimestampMs($expirationAtMs)
             : Carbon::now()->addMonth();
 
         if (in_array($type, ['INITIAL_PURCHASE', 'RENEWAL'])) {

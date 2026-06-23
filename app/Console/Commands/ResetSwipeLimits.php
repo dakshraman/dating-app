@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -27,11 +28,11 @@ class ResetSwipeLimits extends Command
      */
     public function handle()
     {
-        \App\Models\User::query()->update([
+        User::query()->update([
             'remaining_swipes' => 10,
             'remaining_super_likes' => 5,
         ]);
-        
+
         $this->info('Swipe limits reset successfully.');
     }
 }

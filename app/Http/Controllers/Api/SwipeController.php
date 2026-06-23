@@ -35,11 +35,11 @@ class SwipeController extends Controller
 
         $isSuperLike = $request->boolean('is_super_like');
 
-        if ($isSuperLike && !$user->hasActiveSubscription() && $user->remaining_super_likes <= 0) {
+        if ($isSuperLike && ! $user->hasActiveSubscription() && $user->remaining_super_likes <= 0) {
             return response()->json(['message' => 'You have reached your daily super like limit.'], 422);
         }
 
-        if ($request->direction === 'like' && !$isSuperLike && !$user->hasActiveSubscription() && $user->remaining_swipes <= 0) {
+        if ($request->direction === 'like' && ! $isSuperLike && ! $user->hasActiveSubscription() && $user->remaining_swipes <= 0) {
             return response()->json(['message' => 'You have reached your daily swipe limit.'], 422);
         }
 
@@ -51,7 +51,7 @@ class SwipeController extends Controller
             ]
         );
 
-        if (!$user->hasActiveSubscription()) {
+        if (! $user->hasActiveSubscription()) {
             if ($isSuperLike) {
                 $user->decrement('remaining_super_likes');
             } elseif ($request->direction === 'like') {
@@ -203,7 +203,7 @@ class SwipeController extends Controller
             ->where('direction', 'like')
             ->whereNotExists(function ($query) use ($user) {
                 $query->select(DB::raw(1))
-                    ->from('user_matches')
+                    ->from('matches')
                     ->where(function ($q) use ($user) {
                         $q->where('user1_id', $user->id)
                             ->whereColumn('user2_id', 'swipes.swiped_id');
