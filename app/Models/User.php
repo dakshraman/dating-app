@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'last_seen_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_tokens', 'is_banned', 'ban_reason', 'banned_at'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'last_seen_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_tokens', 'is_banned', 'ban_reason', 'banned_at', 'mask_name'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser
             'is_verified' => 'boolean',
             'is_active' => 'boolean',
             'is_banned' => 'boolean',
+            'mask_name' => 'boolean',
             'banned_at' => 'datetime',
             'last_active_at' => 'datetime',
             'last_seen_at' => 'datetime',

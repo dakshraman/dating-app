@@ -36,6 +36,7 @@ class ProfileController extends Controller
             'education' => 'nullable|string|max:255',
             'profession' => 'nullable|string|max:255',
             'income_range' => 'nullable|string|max:255',
+            'mask_name' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -47,6 +48,7 @@ class ProfileController extends Controller
             'location', 'latitude', 'longitude', 'profile_photo',
             'state', 'city', 'religion', 'mother_tongue',
             'dietary_preference', 'education', 'profession', 'income_range',
+            'mask_name',
         ]));
 
         return response()->json($user->fresh()->load(['photos', 'preferences', 'interests', 'prompts']));
@@ -234,6 +236,7 @@ class ProfileController extends Controller
                 'city' => $profile->city,
                 'profile_photo' => $profile->profile_photo,
                 'is_verified' => $profile->is_verified,
+                'mask_name' => $profile->mask_name,
                 'religion' => $profile->religion,
                 'mother_tongue' => $profile->mother_tongue,
                 'dietary_preference' => $profile->dietary_preference,
@@ -284,6 +287,7 @@ class ProfileController extends Controller
             'city' => $profile->city,
             'profile_photo' => $profile->profile_photo,
             'is_verified' => $profile->is_verified,
+            'mask_name' => $profile->mask_name,
             'religion' => $profile->religion,
             'mother_tongue' => $profile->mother_tongue,
             'dietary_preference' => $profile->dietary_preference,
