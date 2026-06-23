@@ -201,8 +201,9 @@ class ProfileController extends Controller
 
         if ($preferences) {
             if ($preferences->min_age) {
-                $query->whereRaw("CAST(strftime('%Y', 'now') - strftime('%Y', birth_date) AS INTEGER) >= ?", [$preferences->min_age])
-                    ->whereRaw("CAST(strftime('%Y', 'now') - strftime('%Y', birth_date) AS INTEGER) <= ?", [$preferences->max_age ?? 99]);
+                $minDate = now()->subYears($preferences->max_age ?? 99)->format('Y-m-d');
+                $maxDate = now()->subYears($preferences->min_age)->format('Y-m-d');
+                $query->whereBetween('birth_date', [$minDate, $maxDate]);
             }
 
             if ($preferences->max_distance && $user->latitude && $user->longitude) {
