@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WelcomeMail;
 
 class AuthController extends Controller
 {
@@ -54,6 +56,8 @@ class AuthController extends Controller
         ]);
 
         UserPreference::create(['user_id' => $user->id]);
+
+        Mail::to($user->email)->send(new WelcomeMail($user));
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
@@ -126,6 +130,8 @@ class AuthController extends Controller
             ]);
 
             UserPreference::create(['user_id' => $user->id]);
+
+            Mail::to($user->email)->send(new WelcomeMail($user));
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -161,6 +167,8 @@ class AuthController extends Controller
             ]);
 
             UserPreference::create(['user_id' => $user->id]);
+
+            Mail::to($user->email)->send(new WelcomeMail($user));
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
