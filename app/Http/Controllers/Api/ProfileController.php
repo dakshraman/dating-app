@@ -207,8 +207,8 @@ class ProfileController extends Controller
             }
 
             if ($preferences->max_distance && $user->latitude && $user->longitude) {
-                $haversine = '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))';
-                $query->whereRaw("{$haversine} < ?", [$user->latitude, $user->longitude, $user->latitude, $preferences->max_distance]);
+                $haversine = '(6371 * acos(least(1.0, cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))))';
+                $query->whereRaw("{$haversine} <= ?", [$user->latitude, $user->longitude, $user->latitude, $preferences->max_distance]);
             }
         }
 

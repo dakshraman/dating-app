@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>IndieDate | Electric Romanticism</title>
+  <title>IndieDate | Your Kind of Love</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet" />
@@ -416,7 +416,7 @@ void main() {
       <div class="flex flex-col md:flex-row justify-between items-center px-container-padding max-w-[1200px] mx-auto gap-lg">
         <div class="flex flex-col items-center md:items-start gap-sm">
           <img src="{{ asset('indiedate.png') }}" alt="IndieDate Logo" class="h-8 w-auto mb-2" />
-          <span class="font-label-sm text-label-sm text-on-surface-variant">© 2024 IndieDate. Electric Romanticism.</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant">© 2024 IndieDate. Your Kind of Love</span>
         </div>
         <nav class="flex flex-wrap justify-center gap-md">
           <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-tertiary transition-colors duration-200" href="#">Privacy Policy</a>
