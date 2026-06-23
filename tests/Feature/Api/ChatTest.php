@@ -192,7 +192,7 @@ class ChatTest extends TestCase
         $target = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson('/api/user/block', [
-            'user_id' => $target->id,
+            'blocked_id' => $target->id,
         ]);
 
         $response->assertStatus(200);
@@ -204,7 +204,7 @@ class ChatTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson('/api/user/block', [
-            'user_id' => $user->id,
+            'blocked_id' => $user->id,
         ]);
 
         $response->assertStatus(422);
@@ -243,7 +243,7 @@ class ChatTest extends TestCase
         $target = User::factory()->create();
 
         $response = $this->actingAs($user)->postJson('/api/user/report', [
-            'user_id' => $target->id,
+            'reported_id' => $target->id,
             'reason' => 'Inappropriate behavior',
         ]);
 

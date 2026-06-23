@@ -219,7 +219,7 @@ class FullApiTest extends TestCase
 
         // React to message
         $res = $this->postJson('/api/conversations/' . $convId . '/messages/' . $msgId . '/react', [
-            'metadata' => ['emoji' => '❤️'],
+            'emoji' => '❤️',
         ]);
         $this->assertEquals(200, $res->status(), 'REACT');
 
@@ -240,10 +240,10 @@ class FullApiTest extends TestCase
 
         // ===== BLOCK & REPORT =====
         $this->actingAs($user1);
-        $res = $this->postJson('/api/user/block', ['user_id' => $user2->id]);
+        $res = $this->postJson('/api/user/block', ['blocked_id' => $user2->id]);
         $this->assertEquals(200, $res->status(), 'BLOCK');
 
-        $res = $this->postJson('/api/user/report', ['user_id' => $user2->id]);
+        $res = $this->postJson('/api/user/report', ['reported_id' => $user2->id, 'reason' => 'spam']);
         $this->assertEquals(200, $res->status(), 'REPORT');
 
         // ===== LAST SEEN =====
