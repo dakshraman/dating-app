@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class FullApiTest extends TestCase
@@ -287,7 +288,10 @@ class FullApiTest extends TestCase
 
         // Verification photo
         $this->actingAs($user1);
-        $res = $this->postJson('/api/profile/verification-photo', ['photo' => 'https://example.com/verif.jpg']);
+        $file = UploadedFile::fake()->image('verification.jpg');
+        $res = $this->post('/api/profile/verification-photo', [
+            'verification_photo' => $file,
+        ]);
         $this->assertEquals(200, $res->status(), 'VERIF PHOTO');
 
         // ===== UNDO SWIPE =====

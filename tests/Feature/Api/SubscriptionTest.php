@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class SubscriptionTest extends TestCase
@@ -120,12 +121,15 @@ class SubscriptionTest extends TestCase
     public function test_user_can_upload_verification_photo(): void
     {
         $user = User::factory()->create();
+        $file = UploadedFile::fake()->image('verification.jpg');
 
-        $response = $this->actingAs($user)->postJson('/api/profile/verification-photo', [
-            'photo' => 'https://example.com/verification.jpg',
+        $response = $this->actingAs($user)->post('/api/profile/verification-photo', [
+            'verification_photo' => $file,
         ]);
 
         $response->assertStatus(200);
-        $this->assertEquals('https://example.com/verification.jpg', $user->fresh()->verification_photo);
+        $response->assertJson(['is_verified' => true]);
+        $this->assertNotNull($user->fresh()->verification_photo);
+        $this->assertTrue((bool) $user->fresh()->is_verified);
     }
 }

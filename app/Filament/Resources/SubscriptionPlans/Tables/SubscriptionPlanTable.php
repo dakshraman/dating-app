@@ -28,6 +28,9 @@ class SubscriptionPlanTable
             ->filters([
                 //
             ])
+            ->actions([
+                \Filament\Tables\Actions\EditAction::make(),
+            ])
             ->defaultSort('price');
     }
 }
