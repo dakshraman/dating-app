@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\User;
 use App\Models\SubscriptionPlan;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -188,7 +188,7 @@ class FullApiTest extends TestCase
         $this->assertNotNull($convId, 'No conversation from match');
 
         // Send message
-        $res = $this->postJson('/api/conversations/' . $convId . '/messages', [
+        $res = $this->postJson('/api/conversations/'.$convId.'/messages', [
             'content' => 'Hey there!',
             'type' => 'text',
         ]);
@@ -196,39 +196,39 @@ class FullApiTest extends TestCase
         $msgId = $res->json('id');
 
         // Get messages
-        $res = $this->getJson('/api/conversations/' . $convId . '/messages');
+        $res = $this->getJson('/api/conversations/'.$convId.'/messages');
         $this->assertEquals(200, $res->status(), 'GET MSGS');
         $this->assertGreaterThanOrEqual(1, count($res->json()));
 
         // Send image (as user2)
         $this->actingAs($user2);
-        $res = $this->postJson('/api/conversations/' . $convId . '/messages', [
+        $res = $this->postJson('/api/conversations/'.$convId.'/messages', [
             'content' => 'https://example.com/img.jpg',
             'type' => 'image',
         ]);
         $this->assertEquals(201, $res->status(), 'SEND IMG');
 
         // Mark as read (as user2)
-        $res = $this->postJson('/api/conversations/' . $convId . '/read');
+        $res = $this->postJson('/api/conversations/'.$convId.'/read');
         $this->assertEquals(200, $res->status(), 'MARK READ');
 
         // Typing (as user1)
         $this->actingAs($user1);
-        $res = $this->postJson('/api/conversations/' . $convId . '/typing');
+        $res = $this->postJson('/api/conversations/'.$convId.'/typing');
         $this->assertEquals(200, $res->status(), 'TYPING');
 
         // React to message
-        $res = $this->postJson('/api/conversations/' . $convId . '/messages/' . $msgId . '/react', [
+        $res = $this->postJson('/api/conversations/'.$convId.'/messages/'.$msgId.'/react', [
             'emoji' => '❤️',
         ]);
         $this->assertEquals(200, $res->status(), 'REACT');
 
         // Delete message
-        $res = $this->deleteJson('/api/conversations/' . $convId . '/messages/' . $msgId);
+        $res = $this->deleteJson('/api/conversations/'.$convId.'/messages/'.$msgId);
         $this->assertEquals(200, $res->status(), 'DELETE MSG');
 
         // ===== VIEW OTHER PROFILE =====
-        $res = $this->getJson('/api/profiles/' . $user2->id);
+        $res = $this->getJson('/api/profiles/'.$user2->id);
         $this->assertEquals(200, $res->status(), 'VIEW PROFILE');
         $this->assertEquals('Jane Doe', $res->json('name'));
 
@@ -295,11 +295,11 @@ class FullApiTest extends TestCase
         $this->assertEquals(200, $res->status(), 'UNDO SWIPE');
 
         // ===== DELETE PHOTO =====
-        $res = $this->deleteJson('/api/profile/photos/' . $photoId);
+        $res = $this->deleteJson('/api/profile/photos/'.$photoId);
         $this->assertEquals(200, $res->status(), 'DEL PHOTO');
 
         // ===== UNMATCH =====
-        $res = $this->deleteJson('/api/matches/' . $matchId);
+        $res = $this->deleteJson('/api/matches/'.$matchId);
         $this->assertEquals(200, $res->status(), 'UNMATCH');
 
         // ===== DELETE ACCOUNT =====

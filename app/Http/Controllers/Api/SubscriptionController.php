@@ -9,6 +9,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class SubscriptionController extends Controller
@@ -118,17 +119,23 @@ class SubscriptionController extends Controller
     public function uploadVerificationPhoto(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'photo' => 'required|string',
+            'verification_photo' => 'required|file|image|mimes:jpeg,png,jpg|max:10240',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $path = $request->file('verification_photo')->store('verification-photos', 'public');
+
         $request->user()->update([
-            'verification_photo' => $request->photo,
+            'verification_photo' => Storage::disk('public')->url($path),
+            'is_verified' => true,
         ]);
 
-        return response()->json(['message' => 'Verification photo uploaded. Pending admin review.']);
+        return response()->json([
+            'message' => 'Verification photo uploaded. Your profile is now verified.',
+            'is_verified' => true,
+        ]);
     }
 }

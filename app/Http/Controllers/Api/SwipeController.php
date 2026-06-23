@@ -10,6 +10,7 @@ use App\Models\Swipe;
 use App\Models\UserMatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class SwipeController extends Controller
@@ -188,6 +189,7 @@ class SwipeController extends Controller
 
         return response()->json(['message' => 'Unmatched']);
     }
+
     public function likesSent(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -195,15 +197,15 @@ class SwipeController extends Controller
         $likes = Swipe::where('swiper_id', $user->id)
             ->where('direction', 'like')
             ->whereNotExists(function ($query) use ($user) {
-                $query->select(\Illuminate\Support\Facades\DB::raw(1))
+                $query->select(DB::raw(1))
                     ->from('user_matches')
                     ->where(function ($q) use ($user) {
                         $q->where('user1_id', $user->id)
-                          ->whereColumn('user2_id', 'swipes.swiped_id');
+                            ->whereColumn('user2_id', 'swipes.swiped_id');
                     })
                     ->orWhere(function ($q) use ($user) {
                         $q->where('user2_id', $user->id)
-                          ->whereColumn('user1_id', 'swipes.swiped_id');
+                            ->whereColumn('user1_id', 'swipes.swiped_id');
                     });
             })
             ->with('swiped:id,name,profile_photo,bio,birth_date')
