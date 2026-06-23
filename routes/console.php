@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('dating:expire-boosts')->everyMinute();
 Schedule::command('dating:expire-matches')->daily();
+Schedule::command('swipes:reset')->dailyAt('12:00')->timezone('Asia/Kolkata');

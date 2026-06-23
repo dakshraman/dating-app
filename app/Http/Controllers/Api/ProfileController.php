@@ -58,9 +58,9 @@ class ProfileController extends Controller
 
         $validator = Validator::make($request->all(), [
             'gender_preference' => 'nullable|string|in:male,female,other',
-            'min_age' => 'integer|min:18|max:99',
-            'max_age' => 'integer|min:18|max:99',
-            'max_distance' => 'integer|min:1|max:500',
+            'min_age' => 'integer|min:15|max:99',
+            'max_age' => 'integer|min:15|max:99',
+            'max_distance' => 'nullable|integer|min:1',
             'religion_preference' => 'nullable|string|max:255',
             'mother_tongue_preference' => 'nullable|string|max:255',
             'dietary_preference' => 'nullable|string|in:Vegetarian,Non-Vegetarian,Eggetarian,Vegan',

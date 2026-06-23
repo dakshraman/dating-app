@@ -35,6 +35,14 @@ class SwipeController extends Controller
 
         $isSuperLike = $request->boolean('is_super_like');
 
+        if ($isSuperLike && !$user->hasActiveSubscription() && $user->remaining_super_likes <= 0) {
+            return response()->json(['message' => 'You have reached your daily super like limit.'], 422);
+        }
+
+        if ($request->direction === 'like' && !$isSuperLike && !$user->hasActiveSubscription() && $user->remaining_swipes <= 0) {
+            return response()->json(['message' => 'You have reached your daily swipe limit.'], 422);
+        }
+
         $swipe = Swipe::updateOrCreate(
             ['swiper_id' => $user->id, 'swiped_id' => $request->swiped_id],
             [
@@ -43,15 +51,12 @@ class SwipeController extends Controller
             ]
         );
 
-        $usage = DailySwipeUsage::firstOrCreate(
-            ['user_id' => $user->id, 'date' => today()],
-            ['count' => 0, 'super_like_count' => 0],
-        );
-
-        if ($isSuperLike) {
-            $usage->increment('super_like_count');
-        } elseif ($request->direction === 'like') {
-            $usage->increment('count');
+        if (!$user->hasActiveSubscription()) {
+            if ($isSuperLike) {
+                $user->decrement('remaining_super_likes');
+            } elseif ($request->direction === 'like') {
+                $user->decrement('remaining_swipes');
+            }
         }
 
         $matched = false;

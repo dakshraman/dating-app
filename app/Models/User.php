@@ -13,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'last_seen_at', 'fcm_tokens', 'is_banned', 'ban_reason', 'banned_at'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'last_seen_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_tokens', 'is_banned', 'ban_reason', 'banned_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -33,6 +33,8 @@ class User extends Authenticatable implements FilamentUser
             'last_seen_at' => 'datetime',
             'password' => 'hashed',
             'fcm_tokens' => 'array',
+            'remaining_swipes' => 'integer',
+            'remaining_super_likes' => 'integer',
         ];
     }
 
@@ -173,12 +175,12 @@ class User extends Authenticatable implements FilamentUser
 
     public function getRemainingSwipes(): int
     {
-        return PHP_INT_MAX;
+        return $this->hasActiveSubscription() ? PHP_INT_MAX : $this->remaining_swipes;
     }
 
     public function getRemainingSuperLikes(): int
     {
-        return PHP_INT_MAX;
+        return $this->hasActiveSubscription() ? PHP_INT_MAX : $this->remaining_super_likes;
     }
 
     public function scopeDiscoverable($query, User $user)
