@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SubscriptionPlans\Tables;
 
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -29,7 +30,7 @@ class SubscriptionPlanTable
                 //
             ])
             ->actions([
-                \Filament\Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ])
             ->defaultSort('price');
     }
