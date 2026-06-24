@@ -24,9 +24,9 @@
                 'bg-warning-500 text-white ring-warning-500/30' => ! $allHealthy && ! $hasIssues,
             ])>
                 @if($allHealthy)
-                    <x-heroicon-s-check-circle class="w-8 h-8" />
+                    <x-filament::icon icon="heroicon-s-check-circle" class="h-6 w-6" />
                 @else
-                    <x-heroicon-s-exclamation-triangle class="w-8 h-8" />
+                    <x-filament::icon icon="heroicon-s-exclamation-triangle" class="h-6 w-6" />
                 @endif
             </div>
             <div>
@@ -60,7 +60,7 @@
         ] as $stat)
             <div class="fi-section rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 p-6 flex flex-col justify-center transition-all hover:shadow-md">
                 <div class="flex items-center gap-3 text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    <x-dynamic-component :component="$stat['icon']" class="w-5 h-5 text-primary-500 dark:text-primary-400" />
+                    <x-filament::icon :icon="$stat['icon']" class="h-5 w-5 text-primary-500 dark:text-primary-400" />
                     {{ $stat['label'] }}
                 </div>
                 <div class="mt-3 text-3xl font-bold text-gray-950 dark:text-white tabular-nums tracking-tight">
@@ -74,7 +74,7 @@
     <div>
         <div class="flex items-center gap-3 mb-6">
             <div class="p-2 bg-primary-50 dark:bg-primary-500/10 rounded-lg">
-                <x-heroicon-o-server-stack class="w-6 h-6 text-primary-500 dark:text-primary-400" />
+                <x-filament::icon icon="heroicon-o-server-stack" class="h-5 w-5 text-primary-500 dark:text-primary-400" />
             </div>
             <h2 class="text-xl font-bold text-gray-950 dark:text-white">Core Services</h2>
         </div>
