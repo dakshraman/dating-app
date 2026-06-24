@@ -36,6 +36,7 @@ class AdminPageTest extends TestCase
             '/admin/profile-boosts' => 'Profile boosts',
             '/admin/user-subscriptions' => 'User subscriptions',
             '/admin/dating-settings' => 'Dating settings',
+            '/admin/service-status' => 'Service status',
         ];
 
         foreach ($pages as $path => $label) {
