@@ -27,6 +27,11 @@
       "type": "string"
     },
     {
+      "key": "swipedId",
+      "value": "2",
+      "type": "string"
+    },
+    {
       "key": "conversationId",
       "value": "1",
       "type": "string"
@@ -54,6 +59,11 @@
     {
       "key": "fcmToken",
       "value": "firebase-device-token-here",
+      "type": "string"
+    },
+    {
+      "key": "cursor",
+      "value": "",
       "type": "string"
     }
   ],
@@ -92,6 +102,33 @@
               "raw": "{{base_url}}/login",
               "host": ["{{base_url}}"],
               "path": ["login"]
+            }
+          }
+        },
+        {
+          "name": "Google OAuth (Redirect)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/google",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google"]
+            }
+          }
+        },
+        {
+          "name": "Google OAuth (Callback)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/google/callback?code={{code}}",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "google", "callback"],
+              "query": [
+                { "key": "code", "value": "{{code}}", "description": "Authorization code from Google" }
+              ]
             }
           }
         },
@@ -143,6 +180,62 @@
       ]
     },
     {
+      "name": "Forgot Password",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/forgot-password/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["forgot-password", "send-otp"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"otp\": \"123456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/forgot-password/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["forgot-password", "verify-otp"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"otp\": \"123456\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/forgot-password/reset",
+              "host": ["{{base_url}}"],
+              "path": ["forgot-password", "reset"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Profile",
       "item": [
         {
@@ -154,7 +247,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Name\",\n  \"bio\": \"New bio here\",\n  \"location\": \"Mumbai\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.8777,\n  \"profile_photo\": \"https://example.com/photo.jpg\",\n  \"state\": \"Maharashtra\",\n  \"city\": \"Mumbai\",\n  \"religion\": \"Hindu\",\n  \"mother_tongue\": \"Hindi\",\n  \"education\": \"Bachelor's\",\n  \"profession\": \"Engineer\",\n  \"income_range\": \"10-15 LPA\"\n}",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"bio\": \"New bio here\",\n  \"gender\": \"male\",\n  \"birth_date\": \"1995-06-15\",\n  \"location\": \"Mumbai\",\n  \"latitude\": 19.076,\n  \"longitude\": 72.8777,\n  \"profile_photo\": \"https://example.com/photo.jpg\",\n  \"state\": \"Maharashtra\",\n  \"city\": \"Mumbai\",\n  \"religion\": \"Hindu\",\n  \"mother_tongue\": \"Hindi\",\n  \"dietary_preference\": \"Vegetarian\",\n  \"education\": \"Bachelor's\",\n  \"profession\": \"Engineer\",\n  \"income_range\": \"10-15 LPA\",\n  \"mask_name\": false\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -173,7 +266,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"gender_preference\": \"female\",\n  \"min_age\": 20,\n  \"max_age\": 40,\n  \"max_distance\": 100,\n  \"religion_preference\": \"Hindu\",\n  \"mother_tongue_preference\": \"Hindi\"\n}",
+              "raw": "{\n  \"gender_preference\": \"female\",\n  \"min_age\": 20,\n  \"max_age\": 40,\n  \"max_distance\": 100,\n  \"religion_preference\": \"Hindu\",\n  \"mother_tongue_preference\": \"Hindi\",\n  \"dietary_preference\": \"Vegetarian\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -184,7 +277,7 @@
           }
         },
         {
-          "name": "Add Photo",
+          "name": "Upload Photo",
           "request": {
             "method": "POST",
             "header": [
@@ -213,6 +306,20 @@
               "raw": "{{base_url}}/profile/photos/{{photoId}}",
               "host": ["{{base_url}}"],
               "path": ["profile", "photos", "{{photoId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Interests",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/interests",
+              "host": ["{{base_url}}"],
+              "path": ["interests"]
             }
           }
         },
@@ -313,7 +420,7 @@
               "host": ["{{base_url}}"],
               "path": ["discover"],
               "query": [
-                { "key": "cursor", "value": "{{cursor}}", "description": "Optional: cursor from previous response for pagination" }
+                { "key": "cursor", "value": "{{cursor}}", "description": "Optional: cursor from previous response for cursor-based pagination" }
               ]
             }
           }
@@ -418,7 +525,7 @@
           }
         },
         {
-          "name": "Likes/Me (alias)",
+          "name": "Likes / Me (alias)",
           "request": {
             "method": "GET",
             "header": [
@@ -428,6 +535,34 @@
               "raw": "{{base_url}}/likes/me",
               "host": ["{{base_url}}"],
               "path": ["likes", "me"]
+            }
+          }
+        },
+        {
+          "name": "Likes Sent",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/likes-sent",
+              "host": ["{{base_url}}"],
+              "path": ["likes-sent"]
+            }
+          }
+        },
+        {
+          "name": "Withdraw Like",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/likes-sent/{{swipedId}}",
+              "host": ["{{base_url}}"],
+              "path": ["likes-sent", "{{swipedId}}"]
             }
           }
         },
@@ -535,9 +670,42 @@
           }
         },
         {
-          "name": "Typing Indicator",
+          "name": "Toggle Vanish Mode",
           "request": {
             "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mode\": \"off\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/vanish-mode",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "vanish-mode"]
+            }
+          }
+        },
+        {
+          "name": "Typing Indicator (Start)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/conversations/{{conversationId}}/typing",
+              "host": ["{{base_url}}"],
+              "path": ["conversations", "{{conversationId}}", "typing"]
+            }
+          }
+        },
+        {
+          "name": "Typing Indicator (Stop)",
+          "request": {
+            "method": "DELETE",
             "header": [
               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
@@ -557,7 +725,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"metadata\": {\n    \"emoji\": \"❤️\"\n  }\n}",
+              "raw": "{\n  \"emoji\": \"❤️\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -599,6 +767,20 @@
               "raw": "{{base_url}}/chat/upload",
               "host": ["{{base_url}}"],
               "path": ["chat", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Update Last Seen",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/user/last-seen",
+              "host": ["{{base_url}}"],
+              "path": ["user", "last-seen"]
             }
           }
         },
@@ -677,27 +859,13 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"user_id\": {{targetUserId}}\n}",
+              "raw": "{\n  \"user_id\": {{targetUserId}},\n  \"reason\": \"Inappropriate behavior\",\n  \"description\": \"This user was sending offensive messages.\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{base_url}}/user/report",
               "host": ["{{base_url}}"],
               "path": ["user", "report"]
-            }
-          }
-        },
-        {
-          "name": "Update Last Seen",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/user/last-seen",
-              "host": ["{{base_url}}"],
-              "path": ["user", "last-seen"]
             }
           }
         }
@@ -781,7 +949,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"plan_id\": {{planId}}\n}",
+              "raw": "{\n  \"plan_id\": {{planId}},\n  \"revenuecat_product_id\": \"monthly_premium\",\n  \"revenuecat_transaction_id\": \"txn_abc123\"\n}",
               "options": { "raw": { "language": "json" } }
             },
             "url": {
@@ -821,6 +989,30 @@
               "raw": "{{base_url}}/profile/verification-photo",
               "host": ["{{base_url}}"],
               "path": ["profile", "verification-photo"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "RevenueCat Webhook",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{revenuecat_webhook_secret}}", "description": "HMAC SHA-256 signature, verified against services.revenuecat.webhook_secret" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": {\n    \"type\": \"INITIAL_PURCHASE\",\n    \"app_user_id\": \"1\",\n    \"product_id\": \"monthly_premium\",\n    \"expiration_at_ms\": 1798765432000,\n    \"environment\": \"PRODUCTION\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/webhooks/revenuecat",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "revenuecat"]
             }
           }
         }
@@ -884,7 +1076,7 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+               { "key": "Authorization", "value": "Bearer {{token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/profile/boost",
