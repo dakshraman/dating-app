@@ -282,6 +282,7 @@ void main() {
         <div class="flex flex-col items-center md:items-start gap-sm">
           <img src="{{ asset('indiedate.png') }}" alt="IndieDate Logo" class="h-8 w-auto mb-2" />
           <span class="font-label-sm text-label-sm text-on-surface-variant">© {{ date('Y') }} IndieDate. Your Kind of Love.</span>
+          <span class="font-label-sm text-label-sm text-on-surface-variant mt-1">Made with ❤️ by <a href="https://codeloomtechnologies.com" target="_blank" class="text-primary hover:underline">Codeloom Technologies</a></span>
         </div>
         <nav class="flex flex-wrap justify-center gap-md">
           <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors duration-200" href="{{ url('about') }}">About Us</a>
