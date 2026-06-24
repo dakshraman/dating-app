@@ -6,8 +6,10 @@ use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\HtmlString;
 use UnitEnum;
 
 class ServiceStatus extends Page
@@ -18,9 +20,12 @@ class ServiceStatus extends Page
 
     protected static string|UnitEnum|null $navigationGroup = 'System';
 
-    public function mount(): void
+    public function content(Schema $schema): Schema
     {
-        $this->view = 'filament.pages.service-status';
+        return $schema
+            ->components([
+                new HtmlString(view('filament.pages.service-status')->render()),
+            ]);
     }
 
     public function getServices(): array
