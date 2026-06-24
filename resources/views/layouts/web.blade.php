@@ -256,18 +256,21 @@ void main() {
   <div class="relative z-10 flex flex-col min-h-screen">
     
     <!-- TopNavBar -->
-    <header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
-      <div class="flex justify-between items-center px-container-padding py-md max-w-[1200px] mx-auto w-full">
-        <a href="{{ url('/') }}">
-          <img src="{{ asset('indiedate.png') }}" alt="IndieDate Logo" class="h-10 w-auto" />
+    <header id="main-header" class="fixed top-0 w-full z-50 transition-all duration-300 bg-surface/40 backdrop-blur-md border-b border-white/5 py-4">
+      <div class="flex justify-between items-center px-container-padding max-w-[1200px] mx-auto w-full relative">
+        <a href="{{ url('/') }}" class="flex items-center gap-2 group relative z-10">
+          <img src="{{ asset('indiedate.png') }}" alt="IndieDate Logo" class="h-10 w-auto transform group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(195,192,255,0.4)]" />
+          <span class="text-xl font-display-lg font-bold tracking-tight text-white hidden sm:block">IndieDate</span>
         </a>
-        <nav class="hidden md:flex gap-lg items-center">
-          <a class="font-label-md text-label-md text-on-surface hover:text-secondary transition-colors duration-300" href="{{ url('/') }}#features">Features</a>
-          <a class="font-label-md text-label-md text-on-surface hover:text-secondary transition-colors duration-300" href="{{ url('/') }}#premium">Premium</a>
-          <a class="font-label-md text-label-md text-on-surface hover:text-secondary transition-colors duration-300" href="{{ url('about') }}">About</a>
+        <nav class="hidden md:flex gap-8 items-center bg-surface-container-highest/50 px-8 py-3 rounded-full border border-white/10 backdrop-blur-xl shadow-inner relative z-10">
+          <a class="font-label-md text-sm font-semibold text-on-surface-variant hover:text-white transition-colors duration-300 relative after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full" href="{{ url('/') }}#features">Features</a>
+          <a class="font-label-md text-sm font-semibold text-on-surface-variant hover:text-white transition-colors duration-300 relative after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full" href="{{ url('/') }}#privacy">Privacy</a>
+          <a class="font-label-md text-sm font-semibold text-on-surface-variant hover:text-white transition-colors duration-300 relative after:absolute after:-bottom-1 after:left-0 after:w-0 after:h-0.5 after:bg-primary after:transition-all hover:after:w-full" href="{{ url('about') }}">About</a>
         </nav>
-        <button class="bg-gradient-to-r from-secondary to-tertiary text-on-secondary font-label-md text-label-md px-lg py-sm rounded-full font-bold shadow-lg hover:opacity-90 active:scale-95 transform transition-all duration-300 neon-glow-rose">
-          Download App
+        <button class="relative z-10 overflow-hidden group bg-surface-bright text-white font-label-md text-sm px-6 py-2.5 rounded-full font-bold border border-white/20 shadow-xl active:scale-95 transform transition-all duration-300 flex items-center gap-2">
+          <span class="absolute inset-0 bg-gradient-to-r from-secondary to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+          <span class="relative z-10">Get the App</span>
+          <span class="material-symbols-outlined relative z-10 text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
         </button>
       </div>
     </header>
@@ -298,9 +301,20 @@ void main() {
 
   </div>
 
-  <!-- Scroll Reveal Script -->
+  <!-- Scroll Header Script -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
+      const header = document.getElementById("main-header");
+      window.addEventListener("scroll", () => {
+        if (window.scrollY > 50) {
+          header.classList.add("bg-surface/90", "shadow-lg", "py-2");
+          header.classList.remove("bg-surface/40", "py-4");
+        } else {
+          header.classList.add("bg-surface/40", "py-4");
+          header.classList.remove("bg-surface/90", "shadow-lg", "py-2");
+        }
+      });
+      // ... existing scroll reveal ...
       const observerOptions = {
         root: null,
         rootMargin: '0px',

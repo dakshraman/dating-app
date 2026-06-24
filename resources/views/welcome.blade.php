@@ -3,24 +3,30 @@
 @section('content')
       <!-- Hero Section -->
       <section class="flex flex-col lg:flex-row items-center justify-between w-full py-2xl gap-2xl reveal">
-        <div class="flex-1 flex flex-col items-start text-left max-w-2xl">
-          <div class="inline-flex items-center gap-xs px-md py-xs rounded-full glass-panel mb-lg">
-            <span class="material-symbols-outlined text-secondary text-[16px]">favorite</span>
-            <span class="font-label-sm text-label-sm text-on-surface">Your Kind of Love</span>
+        <div class="flex-1 flex flex-col items-start text-left max-w-2xl relative">
+          <!-- Decorative floating elements -->
+          <div class="absolute -top-10 -left-10 w-20 h-20 bg-secondary/20 rounded-full blur-2xl animate-pulse"></div>
+          <div class="absolute top-40 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-pulse delay-700"></div>
+          <div class="absolute -bottom-10 left-20 w-24 h-24 bg-tertiary/20 rounded-full blur-2xl animate-pulse delay-300"></div>
+
+          <div class="inline-flex items-center gap-xs px-md py-xs rounded-full glass-panel mb-lg relative z-10 border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+            <span class="material-symbols-outlined text-secondary text-[16px] animate-bounce">favorite</span>
+            <span class="font-label-sm text-label-sm text-white font-bold tracking-wide uppercase">Your Kind of Love</span>
           </div>
-          <h1 class="font-display-lg-mobile lg:font-display-lg text-display-lg-mobile lg:text-[64px] leading-[1.1] text-on-surface mb-lg">
-            Dating designed for <span class="neon-text-gradient block mt-2">Authenticity.</span>
+          <h1 class="font-display-lg-mobile lg:font-display-lg text-display-lg-mobile lg:text-[72px] leading-[1.05] text-white mb-lg relative z-10 drop-shadow-2xl">
+            Dating designed for <span class="neon-text-gradient block mt-2 drop-shadow-[0_0_25px_rgba(255,178,185,0.6)]">Authenticity.</span>
           </h1>
-          <p class="font-body-lg text-body-lg text-on-surface-variant mb-xl max-w-xl">
+          <p class="font-body-lg text-body-lg text-on-surface-variant mb-xl max-w-xl relative z-10 text-lg leading-relaxed">
             Swipe globally, match locally. Experience deep compatibility matching, verified profiles, and unparalleled privacy controls designed to let you be your true self.
           </p>
-          <div class="flex flex-col sm:flex-row gap-md w-full sm:w-auto">
-            <button class="bg-on-surface text-background font-headline-md text-headline-md px-xl py-md rounded-full font-bold shadow-lg hover:bg-white active:scale-95 transform transition-all duration-300 flex items-center justify-center gap-2">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg" alt="iOS" class="w-5 h-5 invert" />
-              App Store
+          <div class="flex flex-col sm:flex-row gap-md w-full sm:w-auto relative z-10">
+            <button class="group relative overflow-hidden bg-white text-background font-headline-md text-headline-md px-8 py-4 rounded-full font-bold shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] active:scale-95 transform transition-all duration-300 flex items-center justify-center gap-3">
+              <span class="absolute inset-0 bg-gradient-to-r from-white to-gray-200 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg" alt="iOS" class="w-6 h-6 invert relative z-10" />
+              <span class="relative z-10">App Store</span>
             </button>
-            <button class="glass-panel text-on-surface font-headline-md text-headline-md px-xl py-md rounded-full font-semibold hover:bg-white/10 active:scale-95 transform transition-all duration-300 flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined">android</span>
+            <button class="glass-panel-active text-white font-headline-md text-headline-md px-8 py-4 rounded-full font-semibold hover:bg-white/20 active:scale-95 transform transition-all duration-300 flex items-center justify-center gap-3 border border-white/30">
+              <span class="material-symbols-outlined text-[24px]">android</span>
               Google Play
             </button>
           </div>
@@ -84,64 +90,7 @@
         </div>
       </section>
 
-      <!-- Premium Banner -->
-      <section id="premium" class="w-full py-2xl reveal delay-300">
-        <div class="relative w-full rounded-3xl overflow-hidden glass-panel-active border-2 border-tertiary/30">
-          <div class="absolute inset-0 bg-gradient-to-br from-[#885500]/20 via-background to-background"></div>
-          
-          <div class="relative p-xl lg:p-[60px] flex flex-col lg:flex-row items-center gap-xl lg:gap-[80px]">
-            <div class="flex-1">
-              <div class="inline-flex items-center gap-xs px-md py-xs rounded-full bg-tertiary/20 border border-tertiary/50 mb-lg">
-                <span class="material-symbols-outlined text-tertiary text-[16px]">crown</span>
-                <span class="font-label-sm text-tertiary font-bold tracking-widest uppercase">IndieDate Premium</span>
-              </div>
-              <h2 class="font-display-lg text-[36px] lg:text-[48px] leading-tight text-on-surface mb-lg">
-                Unlock the ultimate dating experience.
-              </h2>
-              <ul class="space-y-4 mb-xl">
-                <li class="flex items-center gap-3 text-on-surface-variant text-lg">
-                  <span class="material-symbols-outlined text-tertiary">check_circle</span>
-                  <strong>See Who Likes You</strong> – Match instantly without the guessing game.
-                </li>
-                <li class="flex items-center gap-3 text-on-surface-variant text-lg">
-                  <span class="material-symbols-outlined text-tertiary">public</span>
-                  <strong>Global Travel Mode</strong> – Change your location and swipe anywhere on Earth.
-                </li>
-                <li class="flex items-center gap-3 text-on-surface-variant text-lg">
-                  <span class="material-symbols-outlined text-tertiary">bolt</span>
-                  <strong>Super Likes & Profile Boosts</strong> – Be seen first and stand out from the crowd.
-                </li>
-                <li class="flex items-center gap-3 text-on-surface-variant text-lg">
-                  <span class="material-symbols-outlined text-tertiary">all_inclusive</span>
-                  <strong>Unlimited Swiping & Rewinds</strong> – Never miss a connection.
-                </li>
-              </ul>
-              <button class="bg-tertiary text-[#2a1700] font-headline-md text-headline-md px-xl py-4 rounded-full font-bold shadow-[0_0_20px_rgba(255,185,95,0.4)] hover:bg-white active:scale-95 transform transition-all duration-300">
-                Upgrade to Premium
-              </button>
-            </div>
-            
-            <div class="flex-1 w-full max-w-[400px]">
-              <div class="glass-panel p-lg rounded-2xl border border-tertiary/20 relative">
-                <div class="absolute -top-4 -right-4 w-12 h-12 bg-tertiary rounded-full flex items-center justify-center shadow-lg shadow-tertiary/50">
-                  <span class="material-symbols-outlined text-[#2a1700]">star</span>
-                </div>
-                <div class="flex items-center gap-4 border-b border-white/10 pb-4 mb-4">
-                  <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=100&q=80" class="w-16 h-16 rounded-full object-cover border-2 border-tertiary" />
-                  <div>
-                    <h4 class="text-white font-bold text-lg">Jordan liked you!</h4>
-                    <p class="text-tertiary text-sm">Match now?</p>
-                  </div>
-                </div>
-                <div class="flex gap-4">
-                  <button class="flex-1 bg-white/10 text-white py-3 rounded-xl font-bold">Pass</button>
-                  <button class="flex-1 bg-tertiary text-[#2a1700] py-3 rounded-xl font-bold">Match</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       <!-- Privacy Section -->
       <section id="privacy" class="w-full py-2xl reveal delay-400">
