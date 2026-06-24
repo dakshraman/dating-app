@@ -134,7 +134,7 @@ class ProfileController extends Controller
     public function updateInterests(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'interests' => 'required|array',
+            'interests' => 'present|array',
             'interests.*' => 'string|max:50',
         ]);
 
@@ -158,7 +158,7 @@ class ProfileController extends Controller
     public function updatePrompts(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'prompts' => 'required|array|max:3',
+            'prompts' => 'present|array|max:3',
             'prompts.*.prompt' => 'required|string|max:200',
             'prompts.*.answer' => 'required|string|max:200',
         ]);
