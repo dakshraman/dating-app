@@ -41,4 +41,10 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'revenuecat' => [
+        'webhook_secret' => env('REVENUECAT_WEBHOOK_SECRET'),
+        'ios_key' => env('REVENUECAT_IOS_KEY'),
+        'android_key' => env('REVENUECAT_ANDROID_KEY'),
+    ],
+
 ];

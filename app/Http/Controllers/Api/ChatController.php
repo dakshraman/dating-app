@@ -125,15 +125,12 @@ class ChatController extends Controller
                 ];
             });
 
-        $unreadOwn = $conversation->messages()
+        $conversation->messages()
             ->where('sender_id', '!=', $user->id)
-            ->whereNull('read_at')
-            ->get();
+            ->where('status', 'sent')
+            ->update(['status' => 'delivered']);
 
-        foreach ($unreadOwn as $msg) {
-            $msg->markDelivered();
-            broadcast(new MessageDelivered($conversation->id, $msg->id, $user->id))->toOthers();
-        }
+        broadcast(new MessageDelivered($conversation->id, 0, $user->id))->toOthers();
 
         return response()->json($messages);
     }
@@ -325,10 +322,21 @@ class ChatController extends Controller
 
         $request->validate(['emoji' => 'required|string']);
         $metadata = $message->metadata ?? [];
-        $metadata['emoji'] = $request->emoji;
+        $reactions = $metadata['reactions'] ?? [];
+
+        $userId = (string) $user->id;
+        $emoji = $request->emoji;
+
+        if (isset($reactions[$userId]) && $reactions[$userId] === $emoji) {
+            unset($reactions[$userId]);
+        } else {
+            $reactions[$userId] = $emoji;
+        }
+
+        $metadata['reactions'] = $reactions;
         $message->update(['metadata' => $metadata]);
 
-        return response()->json(['message' => 'Reaction updated']);
+        return response()->json(['message' => 'Reaction updated', 'reactions' => $reactions]);
     }
 
     public function deleteMessage(Request $request, Conversation $conversation, Message $message): JsonResponse

@@ -13,7 +13,21 @@ class WebhookController extends Controller
 {
     public function revenuecat(Request $request)
     {
-        // Ideally verify a webhook secret from RevenueCat in headers
+        $secret = config('services.revenuecat.webhook_secret');
+        if ($secret) {
+            $signature = $request->header('Authorization');
+            $payload = $request->getContent();
+
+            if (! $signature || ! hash_equals(
+                hash_hmac('sha256', $payload, $secret),
+                $signature
+            )) {
+                Log::warning('RevenueCat webhook: Invalid signature');
+
+                return response()->json(['message' => 'Invalid signature'], 401);
+            }
+        }
+
         $event = $request->input('event');
 
         if (! $event) {

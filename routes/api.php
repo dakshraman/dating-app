@@ -10,20 +10,20 @@ use App\Http\Controllers\Api\WebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,60');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,60');
 
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
-Route::post('/auth/google/mobile', [AuthController::class, 'handleGoogleMobile']);
+Route::post('/auth/google/mobile', [AuthController::class, 'handleGoogleMobile'])->middleware('throttle:5,60');
 
 Route::post('/webhooks/revenuecat', [WebhookController::class, 'revenuecat']);
 
-Route::post('/forgot-password/send-otp', [ForgotPasswordController::class, 'sendOtp']);
-Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
-Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword']);
+Route::post('/forgot-password/send-otp', [ForgotPasswordController::class, 'sendOtp'])->middleware('throttle:3,60');
+Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])->middleware('throttle:10,60');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:5,60');
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
@@ -40,17 +40,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/discover', [ProfileController::class, 'discover']);
     Route::get('/profiles/{id}', [ProfileController::class, 'show']);
 
-    Route::post('/swipe', [SwipeController::class, 'store']);
+    Route::post('/swipe', [SwipeController::class, 'store'])->middleware('throttle:30,1');
     Route::get('/matches', [SwipeController::class, 'matches']);
     Route::delete('/matches/{id}', [SwipeController::class, 'destroy']);
 
     Route::get('/conversations', [ChatController::class, 'conversations']);
     Route::delete('/conversations/{conversation}', [ChatController::class, 'deleteConversation']);
     Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
-    Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage']);
+    Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage'])->middleware('throttle:20,1');
     Route::post('/conversations/{conversation}/read', [ChatController::class, 'markAsRead']);
-    Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing']);
-    Route::delete('/conversations/{conversation}/typing', [ChatController::class, 'stopTyping']);
+    Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing'])->middleware('throttle:60,1');
+    Route::delete('/conversations/{conversation}/typing', [ChatController::class, 'stopTyping'])->middleware('throttle:60,1');
 
     Route::post('/chat/upload', [ChatController::class, 'uploadMedia']);
     Route::post('/user/last-seen', [ChatController::class, 'updateLastSeen']);

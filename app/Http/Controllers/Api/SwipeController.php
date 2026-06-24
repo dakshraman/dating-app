@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\DailySwipeUsage;
 use App\Models\Swipe;
+use App\Models\User;
 use App\Models\UserMatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,11 +36,11 @@ class SwipeController extends Controller
 
         $isSuperLike = $request->boolean('is_super_like');
 
-        if ($isSuperLike && ! $user->hasActiveSubscription() && $user->remaining_super_likes <= 0) {
+        if ($isSuperLike && ! $user->hasActiveSubscription() && $user->getRemainingSuperLikes() <= 0) {
             return response()->json(['message' => 'You have reached your daily super like limit.'], 422);
         }
 
-        if ($request->direction === 'like' && ! $isSuperLike && ! $user->hasActiveSubscription() && $user->remaining_swipes <= 0) {
+        if ($request->direction === 'like' && ! $isSuperLike && ! $user->hasActiveSubscription() && $user->getRemainingSwipes() <= 0) {
             return response()->json(['message' => 'You have reached your daily swipe limit.'], 422);
         }
 
@@ -59,32 +60,58 @@ class SwipeController extends Controller
             }
         }
 
+        if ($request->direction === 'like') {
+            $usage = DailySwipeUsage::firstOrCreate(
+                ['user_id' => $user->id, 'date' => today()],
+                ['count' => 0, 'super_like_count' => 0]
+            );
+
+            if ($isSuperLike) {
+                $usage->increment('super_like_count');
+            } else {
+                $usage->increment('count');
+            }
+        }
+
         $matched = false;
         $match = null;
 
         if ($request->direction === 'like') {
-            $reciprocalSwipe = Swipe::where('swiper_id', $request->swiped_id)
-                ->where('swiped_id', $user->id)
-                ->where('direction', 'like')
-                ->first();
+            $user1Id = min($user->id, (int) $request->swiped_id);
+            $user2Id = max($user->id, (int) $request->swiped_id);
+
+            $reciprocalSwipe = DB::transaction(function () use ($request, $user, $user1Id, $user2Id) {
+                $swipedUser = User::lockForUpdate()->findOrFail($request->swiped_id);
+
+                $reciprocalSwipe = Swipe::where('swiper_id', $request->swiped_id)
+                    ->where('swiped_id', $user->id)
+                    ->where('direction', 'like')
+                    ->first();
+
+                if ($reciprocalSwipe) {
+                    $match = UserMatch::firstOrCreate(
+                        ['user1_id' => $user1Id, 'user2_id' => $user2Id],
+                        ['matched_at' => now()]
+                    );
+
+                    Conversation::firstOrCreate(
+                        ['match_id' => $match->id],
+                        ['user1_id' => $user1Id, 'user2_id' => $user2Id]
+                    );
+
+                    return $reciprocalSwipe;
+                }
+
+                return null;
+            });
 
             if ($reciprocalSwipe) {
                 $matched = true;
+                $match = UserMatch::where('user1_id', $user1Id)
+                    ->where('user2_id', $user2Id)
+                    ->with(['user1', 'user2'])
+                    ->first();
 
-                $user1Id = min($user->id, (int) $request->swiped_id);
-                $user2Id = max($user->id, (int) $request->swiped_id);
-
-                $match = UserMatch::firstOrCreate(
-                    ['user1_id' => $user1Id, 'user2_id' => $user2Id],
-                    ['matched_at' => now()]
-                );
-
-                Conversation::firstOrCreate(
-                    ['match_id' => $match->id],
-                    ['user1_id' => $user1Id, 'user2_id' => $user2Id]
-                );
-
-                $match->load(['user1', 'user2']);
                 broadcast(new NewMatch($match));
             }
         }
@@ -108,18 +135,30 @@ class SwipeController extends Controller
             return response()->json(['message' => 'No swipe to undo'], 404);
         }
 
+        $direction = $lastSwipe->direction;
+        $isSuperLike = $lastSwipe->is_super_like;
+
         $lastSwipe->delete();
 
-        $usage = DailySwipeUsage::where('user_id', $user->id)
-            ->whereDate('date', today())
-            ->first();
-
-        if ($usage) {
-            if ($usage->count > 0) {
-                $usage->decrement('count');
+        if (! $user->hasActiveSubscription()) {
+            if ($isSuperLike) {
+                $user->increment('remaining_super_likes');
+            } elseif ($direction === 'like') {
+                $user->increment('remaining_swipes');
             }
-            if ($usage->super_like_count > 0) {
-                $usage->decrement('super_like_count');
+        }
+
+        if ($direction === 'like') {
+            $usage = DailySwipeUsage::where('user_id', $user->id)
+                ->whereDate('date', today())
+                ->first();
+
+            if ($usage) {
+                if ($isSuperLike && $usage->super_like_count > 0) {
+                    $usage->decrement('super_like_count');
+                } elseif (! $isSuperLike && $usage->count > 0) {
+                    $usage->decrement('count');
+                }
             }
         }
 

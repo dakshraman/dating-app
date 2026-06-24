@@ -9,8 +9,10 @@ use App\Models\ProfilePrompt;
 use App\Models\ProfileVisit;
 use App\Models\User;
 use App\Models\UserMatch;
+use App\Models\UserSubscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
@@ -67,6 +69,12 @@ class ProfileController extends Controller
             'mother_tongue_preference' => 'nullable|string|max:255',
             'dietary_preference' => 'nullable|string|in:Vegetarian,Non-Vegetarian,Eggetarian,Vegan',
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            if ($request->filled('min_age') && $request->filled('max_age') && $request->min_age > $request->max_age) {
+                $validator->errors()->add('min_age', 'Minimum age cannot be greater than maximum age.');
+            }
+        });
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
@@ -159,16 +167,18 @@ class ProfileController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $request->user()->prompts()->delete();
+        DB::transaction(function () use ($request) {
+            $request->user()->prompts()->delete();
 
-        foreach ($request->prompts as $index => $data) {
-            ProfilePrompt::create([
-                'user_id' => $request->user()->id,
-                'prompt' => $data['prompt'],
-                'answer' => $data['answer'],
-                'order' => $index,
-            ]);
-        }
+            foreach ($request->prompts as $index => $data) {
+                ProfilePrompt::create([
+                    'user_id' => $request->user()->id,
+                    'prompt' => $data['prompt'],
+                    'answer' => $data['answer'],
+                    'order' => $index,
+                ]);
+            }
+        });
 
         return response()->json($request->user()->prompts()->get());
     }
@@ -214,8 +224,11 @@ class ProfileController extends Controller
             }
 
             if ($preferences->max_distance && $user->latitude && $user->longitude) {
-                $haversine = '(6371 * acos(least(1.0, cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))))';
-                $query->whereRaw("{$haversine} <= ?", [$user->latitude, $user->longitude, $user->latitude, $preferences->max_distance]);
+                $haversine = '(6371 * acos(case when (cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))) > 1 then 1 else (cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))) end))';
+                $query->whereRaw("{$haversine} <= ?", array_merge(
+                    [$user->latitude, $user->longitude, $user->latitude, $user->latitude, $user->longitude, $user->latitude],
+                    [$preferences->max_distance]
+                ));
             }
         }
 
@@ -305,23 +318,35 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $user->tokens()->delete();
-        $user->photos()->delete();
-        $user->preferences()->delete();
-        $user->prompts()->delete();
-        $user->sentSwipes()->delete();
-        $user->receivedSwipes()->delete();
-        $user->reports()->delete();
+        DB::transaction(function () use ($user) {
+            $user->tokens()->delete();
+            $user->photos()->delete();
+            $user->preferences()->delete();
+            $user->prompts()->delete();
+            $user->sentSwipes()->delete();
+            $user->receivedSwipes()->delete();
+            $user->reports()->delete();
+            $user->blockedUsers()->detach();
+            $user->blockedByUsers()->detach();
+            $user->profileBoosts()->delete();
+            $user->dailySwipeUsage()->delete();
 
-        UserMatch::where('user1_id', $user->id)
-            ->orWhere('user2_id', $user->id)
-            ->delete();
+            ProfileVisit::where('visitor_id', $user->id)
+                ->orWhere('visited_id', $user->id)
+                ->delete();
 
-        Conversation::where('user1_id', $user->id)
-            ->orWhere('user2_id', $user->id)
-            ->delete();
+            UserSubscription::where('user_id', $user->id)->delete();
 
-        $user->delete();
+            UserMatch::where('user1_id', $user->id)
+                ->orWhere('user2_id', $user->id)
+                ->delete();
+
+            Conversation::where('user1_id', $user->id)
+                ->orWhere('user2_id', $user->id)
+                ->delete();
+
+            $user->delete();
+        });
 
         return response()->json(['message' => 'Account deleted successfully']);
     }

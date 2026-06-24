@@ -76,10 +76,9 @@ class User extends Authenticatable implements FilamentUser
 
     public function matches()
     {
-        $user1Matches = $this->matchesAsUser1()->get();
-        $user2Matches = $this->matchesAsUser2()->get();
-
-        return $user1Matches->merge($user2Matches);
+        return UserMatch::where('user1_id', $this->id)
+            ->orWhere('user2_id', $this->id)
+            ->get();
     }
 
     public function conversations()
@@ -104,6 +103,11 @@ class User extends Authenticatable implements FilamentUser
     public function blockedUsers()
     {
         return $this->belongsToMany(User::class, 'blocked_users', 'user_id', 'blocked_id');
+    }
+
+    public function blockedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'blocked_users', 'blocked_id', 'user_id');
     }
 
     public function reports(): HasMany
@@ -176,25 +180,33 @@ class User extends Authenticatable implements FilamentUser
 
     public function getRemainingSwipes(): int
     {
-        return $this->hasActiveSubscription() ? PHP_INT_MAX : $this->remaining_swipes;
+        return $this->hasActiveSubscription() ? PHP_INT_MAX : (int) ($this->remaining_swipes ?? 0);
     }
 
     public function getRemainingSuperLikes(): int
     {
-        return $this->hasActiveSubscription() ? PHP_INT_MAX : $this->remaining_super_likes;
+        return $this->hasActiveSubscription() ? PHP_INT_MAX : (int) ($this->remaining_super_likes ?? 0);
     }
 
     public function scopeDiscoverable($query, User $user)
     {
         $pref = $user->preferences;
 
+        $excludeIds = $user->sentSwipes()->pluck('swiped_id')
+            ->merge($user->blockedUsers()->pluck('blocked_users.blocked_id'))
+            ->merge($user->blockedByUsers()->pluck('users.id'))
+            ->unique()
+            ->values()
+            ->toArray();
+
         return $query->where('id', '!=', $user->id)
             ->where('is_active', true)
+            ->where('is_banned', false)
             ->whereNotNull('birth_date')
             ->whereNotNull('gender')
             ->whereNotNull('profile_photo')
-            ->whereNotIn('id', $user->sentSwipes()->pluck('swiped_id'))
-            ->when($pref, function ($q) use ($pref) {
+            ->when($excludeIds, fn ($q) => $q->whereNotIn('id', $excludeIds))
+            ->when($pref && $pref->gender_preference, function ($q) use ($pref) {
                 $q->where('gender', $pref->gender_preference);
             })
             ->when($pref?->religion_preference, function ($q) use ($pref) {

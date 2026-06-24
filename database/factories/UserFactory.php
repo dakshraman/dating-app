@@ -35,6 +35,8 @@ class UserFactory extends Factory
             'education' => fake()->randomElement(["Bachelor's", "Master's", 'PhD', 'Diploma', 'High School']),
             'profession' => fake()->randomElement(['Engineer', 'Doctor', 'Teacher', 'Business', 'Designer', 'Student']),
             'income_range' => fake()->randomElement(['₹0-5L', '₹5-10L', '₹10-20L', '₹20L+']),
+            'remaining_swipes' => 10,
+            'remaining_super_likes' => 5,
         ];
     }
 
