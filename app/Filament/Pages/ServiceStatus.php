@@ -39,7 +39,7 @@ class ServiceStatus extends Page
                 'supports' => ['start', 'stop', 'restart'],
             ],
             [
-                'key' => 'dating-worker',
+                'key' => 'dating-worker:',
                 'name' => 'Queue Worker',
                 'description' => 'Processes queued jobs such as FCM push notifications and email delivery.',
                 'type' => 'supervisor',
@@ -79,7 +79,7 @@ class ServiceStatus extends Page
     public function getServiceStatus(string $key): array
     {
         return match ($key) {
-            'dating-reverb', 'dating-worker' => $this->checkSupervisor($key),
+            'dating-reverb', 'dating-worker:' => $this->checkSupervisor($key),
             'fcm' => $this->checkFcm(),
             'database' => $this->checkDatabase(),
             'cache' => $this->checkCache(),
@@ -297,9 +297,9 @@ class ServiceStatus extends Page
                 'start' => 'Started',
                 'stop' => 'Stopped',
                 'restart' => 'Restarted',
-                default => ucfirst($action) . 'ed',
+                default => ucfirst($action).'ed',
             };
-            
+
             Notification::make()
                 ->title("{$pastTense} {$name} successfully")
                 ->success()
