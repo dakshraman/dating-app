@@ -3,7 +3,7 @@
 @section('title', 'About Us | IndieDate')
 
 @section('content')
-<section class="w-full max-w-4xl mx-auto py-12 fade-in-up">
+<section class="w-full max-w-4xl mx-auto py-12 reveal">
     <div class="glass-panel-active rounded-[32px] p-xl lg:p-[60px] border border-white/10">
         <h1 class="font-display-lg text-4xl lg:text-5xl text-on-surface mb-6 text-center">About <span class="neon-text-gradient">IndieDate</span></h1>
         

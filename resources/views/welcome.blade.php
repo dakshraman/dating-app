@@ -2,7 +2,7 @@
 
 @section('content')
       <!-- Hero Section -->
-      <section class="flex flex-col lg:flex-row items-center justify-between w-full py-2xl gap-2xl fade-in-up">
+      <section class="flex flex-col lg:flex-row items-center justify-between w-full py-2xl gap-2xl reveal">
         <div class="flex-1 flex flex-col items-start text-left max-w-2xl">
           <div class="inline-flex items-center gap-xs px-md py-xs rounded-full glass-panel mb-lg">
             <span class="material-symbols-outlined text-secondary text-[16px]">favorite</span>
@@ -48,7 +48,7 @@
       </section>
 
       <!-- Features Grid -->
-      <section id="features" class="w-full py-2xl fade-in-up delay-200">
+      <section id="features" class="w-full py-2xl reveal delay-200">
         <div class="text-center mb-xl">
           <h2 class="font-headline-lg-mobile lg:font-headline-lg text-headline-lg-mobile lg:text-[40px] text-on-surface mb-sm">Connect with Intent</h2>
           <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Our features are meticulously crafted to help you find meaningful relationships without the noise.</p>
@@ -85,7 +85,7 @@
       </section>
 
       <!-- Premium Banner -->
-      <section id="premium" class="w-full py-2xl fade-in-up delay-300">
+      <section id="premium" class="w-full py-2xl reveal delay-300">
         <div class="relative w-full rounded-3xl overflow-hidden glass-panel-active border-2 border-tertiary/30">
           <div class="absolute inset-0 bg-gradient-to-br from-[#885500]/20 via-background to-background"></div>
           
@@ -144,7 +144,7 @@
       </section>
 
       <!-- Privacy Section -->
-      <section id="privacy" class="w-full py-2xl fade-in-up delay-400">
+      <section id="privacy" class="w-full py-2xl reveal delay-400">
         <div class="flex flex-col-reverse lg:flex-row items-center gap-xl lg:gap-[80px]">
           <div class="flex-1 w-full max-w-[500px]">
              <div class="glass-panel p-xl rounded-[32px] border border-white/10 flex flex-col items-center justify-center text-center">

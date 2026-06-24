@@ -140,6 +140,17 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    
+    /* Scroll Reveal Animation Classes */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px) scale(0.98);
+      transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+    }
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
   </style>
 </head>
 <body class="bg-background text-on-background min-h-screen relative overflow-x-hidden antialiased">
@@ -278,10 +289,42 @@ void main() {
           <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors duration-200" href="{{ url('terms') }}">Terms of Service</a>
           <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors duration-200" href="{{ url('safety') }}">Safety Tips</a>
           <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors duration-200" href="{{ url('contact') }}">Contact Us</a>
+          <a class="font-label-sm text-label-sm text-error hover:text-error/80 transition-colors duration-200" href="{{ url('delete-account') }}">Delete Account</a>
         </nav>
       </div>
     </footer>
 
   </div>
+
+  <!-- Scroll Reveal Script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.15
+      };
+
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+            observer.unobserve(entry.target); // Optional: only animate once
+          }
+        });
+      }, observerOptions);
+
+      document.querySelectorAll('.reveal').forEach((el) => {
+        observer.observe(el);
+      });
+      
+      // Also apply reveal to any existing .fade-in-up elements that aren't manually styled
+      document.querySelectorAll('.fade-in-up').forEach((el) => {
+          // If we want to override the load animation with scroll animation, we can add 'reveal'
+          el.classList.add('reveal');
+          observer.observe(el);
+      });
+    });
+  </script>
 </body>
 </html>

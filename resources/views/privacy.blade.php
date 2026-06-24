@@ -22,7 +22,7 @@
             <p>We do not sell your personal data to third parties. Data is only shared with trusted service providers who assist us in operating the platform securely.</p>
 
             <h3 class="text-xl text-on-surface font-headline-md mt-6 mb-2">5. Contact Us</h3>
-            <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:support@indiedate.com" class="text-primary hover:underline">support@indiedate.com</a>.</p>
+            <p>If you have any questions about this Privacy Policy, please contact us at <a href="mailto:indiedate.in@gmail.com" class="text-primary hover:underline">indiedate.in@gmail.com</a>.</p>
         </div>
     </div>
 </section>

@@ -12,7 +12,7 @@
             </p>
             <div class="flex items-center gap-4 mb-4 text-on-surface">
                 <span class="material-symbols-outlined text-primary text-[24px]">email</span>
-                <span class="font-bold">support@indiedate.com</span>
+                <span class="font-bold">indiedate.in@gmail.com</span>
             </div>
             <div class="flex items-center gap-4 text-on-surface">
                 <span class="material-symbols-outlined text-primary text-[24px]">headset_mic</span>
