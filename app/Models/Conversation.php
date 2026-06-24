@@ -9,7 +9,7 @@ class Conversation extends Model
 {
     protected $fillable = [
         'match_id', 'user1_id', 'user2_id', 'last_message_at',
-        'user1_deleted_at', 'user2_deleted_at',
+        'user1_deleted_at', 'user2_deleted_at', 'vanish_mode',
     ];
 
     protected function casts(): array
@@ -77,5 +77,15 @@ class Conversation extends Model
         } elseif ($user->id === $this->user2_id && $this->user2_deleted_at) {
             $this->update(['user2_deleted_at' => null]);
         }
+    }
+
+    public function isVanishMode(): bool
+    {
+        return $this->vanish_mode !== 'off';
+    }
+
+    public function scopeWhereVanishMode(Builder $query, string $mode): Builder
+    {
+        return $query->where('vanish_mode', $mode);
     }
 }

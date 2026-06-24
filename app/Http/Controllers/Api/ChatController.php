@@ -61,6 +61,7 @@ class ChatController extends Controller
                     ] : null,
                     'unread_count' => $unreadCount,
                     'last_message_at' => $conv->last_message_at,
+                    'vanish_mode' => $conv->vanish_mode,
                 ];
             })
             ->filter()
@@ -84,7 +85,11 @@ class ChatController extends Controller
         }
 
         $query = $conversation->messages()
-            ->with(['sender', 'replyTo.sender']);
+            ->with(['sender', 'replyTo.sender'])
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            });
 
         if ($request->filled('before')) {
             $query->where('id', '<', $request->integer('before'));
@@ -107,6 +112,7 @@ class ChatController extends Controller
                     'status' => $msg->status,
                     'metadata' => $msg->metadata,
                     'read_at' => $msg->read_at,
+                    'expires_at' => $msg->expires_at,
                     'created_at' => $msg->created_at,
                     'reply_to' => $replyTo ? [
                         'id' => $replyTo->id,
@@ -177,6 +183,12 @@ class ChatController extends Controller
             'status' => 'sent',
         ];
 
+        if ($conversation->vanish_mode === '24h') {
+            $messageData['expires_at'] = now()->addHours(24);
+        } elseif ($conversation->vanish_mode === 'after_seen') {
+            $messageData['expires_at'] = now();
+        }
+
         $message = $conversation->messages()->create($messageData);
         $conversation->update(['last_message_at' => now()]);
         $message->load(['sender', 'replyTo.sender']);
@@ -196,6 +208,7 @@ class ChatController extends Controller
             'status' => $message->status,
             'metadata' => $message->metadata,
             'read_at' => $message->read_at,
+            'expires_at' => $message->expires_at,
             'created_at' => $message->created_at,
             'reply_to' => $message->replyTo ? [
                 'id' => $message->replyTo->id,
@@ -241,20 +254,47 @@ class ChatController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $messages = $conversation->messages()
+        $unreadMessages = $conversation->messages()
             ->where('sender_id', '!=', $user->id)
             ->whereNull('read_at')
             ->get();
 
         $now = now();
-        foreach ($messages as $message) {
+        foreach ($unreadMessages as $message) {
             $message->markRead();
         }
 
-        $lastReadId = $messages->last()?->id;
+        $lastReadId = $unreadMessages->last()?->id;
+
+        if ($conversation->vanish_mode === 'after_seen') {
+            $conversation->messages()
+                ->where('sender_id', '!=', $user->id)
+                ->whereNotNull('read_at')
+                ->where('expires_at', '<=', $now)
+                ->delete();
+        }
+
         broadcast(new MessageRead($conversation, $user, $lastReadId ?? 0))->toOthers();
 
         return response()->json(['message' => 'Marked as read', 'last_read_message_id' => $lastReadId]);
+    }
+
+    public function toggleVanishMode(Request $request, Conversation $conversation): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($conversation->user1_id !== $user->id && $conversation->user2_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $request->validate(['mode' => 'required|in:off,24h,after_seen']);
+
+        $conversation->update(['vanish_mode' => $request->mode]);
+
+        return response()->json([
+            'message' => 'Vanish mode updated',
+            'vanish_mode' => $conversation->vanish_mode,
+        ]);
     }
 
     public function typing(Request $request, Conversation $conversation): JsonResponse

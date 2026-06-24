@@ -49,6 +49,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage'])->middleware('throttle:20,1');
     Route::post('/conversations/{conversation}/read', [ChatController::class, 'markAsRead']);
+    Route::post('/conversations/{conversation}/vanish-mode', [ChatController::class, 'toggleVanishMode']);
     Route::post('/conversations/{conversation}/typing', [ChatController::class, 'typing'])->middleware('throttle:60,1');
     Route::delete('/conversations/{conversation}/typing', [ChatController::class, 'stopTyping'])->middleware('throttle:60,1');
 
