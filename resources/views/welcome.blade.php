@@ -4,11 +4,6 @@
       <!-- Hero Section -->
       <section class="flex flex-col lg:flex-row items-center justify-between w-full py-2xl gap-2xl reveal">
         <div class="flex-1 flex flex-col items-start text-left max-w-2xl relative">
-          <!-- Decorative floating elements -->
-          <div class="absolute -top-10 -left-10 w-20 h-20 bg-secondary/20 rounded-full blur-2xl animate-pulse"></div>
-          <div class="absolute top-40 -right-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl animate-pulse delay-700"></div>
-          <div class="absolute -bottom-10 left-20 w-24 h-24 bg-tertiary/20 rounded-full blur-2xl animate-pulse delay-300"></div>
-
           <div class="inline-flex items-center gap-xs px-md py-xs rounded-full glass-panel mb-lg relative z-10 border border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
             <span class="material-symbols-outlined text-secondary text-[16px] animate-bounce">favorite</span>
             <span class="font-label-sm text-label-sm text-white font-bold tracking-wide uppercase">Your Kind of Love</span>

@@ -253,6 +253,11 @@ void main() {
       </script>
     </div>
     <div class="absolute inset-0 bg-gradient-to-b from-background/40 via-background/60 to-background z-10 pointer-events-none"></div>
+    
+    <!-- Global Decorative Ambient Elements -->
+    <div class="absolute top-20 left-[10%] w-[300px] h-[300px] bg-secondary/10 rounded-full blur-[100px] animate-pulse pointer-events-none z-10"></div>
+    <div class="absolute top-[40%] right-[10%] w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] animate-pulse delay-700 pointer-events-none z-10"></div>
+    <div class="fixed bottom-0 left-[30%] w-[350px] h-[350px] bg-tertiary/10 rounded-full blur-[100px] animate-pulse delay-300 pointer-events-none z-10"></div>
   </div>
 
   <div class="relative z-10 flex flex-col min-h-screen">
