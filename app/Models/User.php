@@ -132,8 +132,8 @@ class User extends Authenticatable implements FilamentUser
 
     public function compatibilityWith(User $other): int
     {
-        $myInterests = $this->interests()->pluck('interest_id');
-        $theirInterests = $other->interests()->pluck('interest_id');
+        $myInterests = $this->interests->pluck('id');
+        $theirInterests = $other->interests->pluck('id');
 
         $shared = $myInterests->intersect($theirInterests);
         $total = $myInterests->union($theirInterests)->count();
