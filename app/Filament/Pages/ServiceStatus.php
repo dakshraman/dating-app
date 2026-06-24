@@ -153,6 +153,10 @@ class ServiceStatus extends Page
             return $this->statusResult('misconfigured', 'Missing Credentials', 'danger');
         }
 
+        if (! is_readable($path)) {
+            return $this->statusResult('error', 'Unreadable', 'danger', 'Check file permissions');
+        }
+
         $content = file_get_contents($path);
         $json = json_decode($content, true);
 
@@ -309,6 +313,16 @@ class ServiceStatus extends Page
             Notification::make()
                 ->title('FCM Test Failed')
                 ->body('Firebase credentials file not found at storage/app/firebase-credentials.json.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        if (! is_readable($path)) {
+            Notification::make()
+                ->title('FCM Test Failed')
+                ->body('Firebase credentials file exists but is not readable by the web server. Fix permissions.')
                 ->danger()
                 ->send();
 
