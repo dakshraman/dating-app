@@ -90,20 +90,14 @@ class ServiceStatus extends Page
 
     protected function checkSupervisor(string $name): array
     {
-        $result = $this->runSupervisorCtl('status', $name.':*');
+        $result = $this->runSupervisorCtl('status', $name);
 
         if ($result === null) {
             return $this->statusResult('unavailable', 'N/A', 'gray');
         }
 
         if (! $result['success']) {
-            $result2 = $this->runSupervisorCtl('status', $name);
-
-            if ($result2 === null || ! $result2['success']) {
-                return $this->statusResult('error', 'Error', 'danger');
-            }
-
-            $result = $result2;
+            return $this->statusResult('error', 'Error', 'danger');
         }
 
         $output = trim($result['output']);
@@ -210,7 +204,7 @@ class ServiceStatus extends Page
 
     protected function runSupervisorCtl(string $action, string $name): ?array
     {
-        $process = Process::run("supervisorctl {$action} {$name}");
+        $process = Process::run("supervisorctl {$action} {$name} 2>&1");
 
         if ($process->successful()) {
             return [
@@ -219,7 +213,7 @@ class ServiceStatus extends Page
             ];
         }
 
-        $process = Process::run("sudo supervisorctl {$action} {$name}");
+        $process = Process::run("sudo supervisorctl {$action} {$name} 2>&1");
 
         if ($process->successful()) {
             return [
@@ -231,7 +225,25 @@ class ServiceStatus extends Page
         $exitCode = $process->exitCode();
         $error = $process->errorOutput();
 
-        if ($exitCode === 127 || str_contains($error, 'command not found')) {
+        $unavailablePatterns = [
+            'command not found',
+            'no such file',
+            'permission denied',
+            'connection refused',
+            'unix:///var/run/supervisor.sock',
+            'cannot connect',
+            'refused',
+            'no socket',
+            'http://localhost',
+        ];
+
+        foreach ($unavailablePatterns as $pattern) {
+            if (str_contains(strtolower($error), $pattern)) {
+                return null;
+            }
+        }
+
+        if ($exitCode === 127 || $exitCode === 126) {
             return null;
         }
 
