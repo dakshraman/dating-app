@@ -14,13 +14,15 @@ class ConversationDeleted implements ShouldBroadcast
 
     public function __construct(
         public Conversation $conversation,
-        public int $userId
+        public int $userId,
+        public int $otherUserId
     ) {}
 
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel("conversation.{$this->conversation->id}"),
+            new PrivateChannel("user.{$this->otherUserId}"),
         ];
     }
 

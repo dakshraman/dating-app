@@ -21,8 +21,13 @@ class MessageRead implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
+        $otherUserId = $this->user->id === $this->conversation->user1_id
+            ? $this->conversation->user2_id
+            : $this->conversation->user1_id;
+
         return [
             new PrivateChannel("conversation.{$this->conversation->id}"),
+            new PrivateChannel("user.{$otherUserId}"),
         ];
     }
 

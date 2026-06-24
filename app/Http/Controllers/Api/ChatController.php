@@ -136,7 +136,8 @@ class ChatController extends Controller
             ->where('status', 'sent')
             ->update(['status' => 'delivered']);
 
-        broadcast(new MessageDelivered($conversation->id, 0, $user->id))->toOthers();
+        $deliveryOtherUser = $conversation->getOtherUser($user);
+        broadcast(new MessageDelivered($conversation->id, 0, $user->id, $deliveryOtherUser->id))->toOthers();
 
         return response()->json($messages);
     }
@@ -311,7 +312,7 @@ class ChatController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        broadcast(new TypingIndicator($conversation->id, $user->id, $user->name))->toOthers();
+        broadcast(new TypingIndicator($conversation->id, $user->id, $otherUser->id, $user->name))->toOthers();
 
         return response()->json(['message' => 'Typing indicator sent']);
     }
@@ -324,7 +325,9 @@ class ChatController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        broadcast(new TypingStopped($conversation->id, $user->id, $user->name))->toOthers();
+        $otherUser = $conversation->getOtherUser($user);
+
+        broadcast(new TypingStopped($conversation->id, $user->id, $otherUser->id, $user->name))->toOthers();
 
         return response()->json(['message' => 'Typing stopped']);
     }
@@ -340,7 +343,8 @@ class ChatController extends Controller
         $column = $user->id === $conversation->user1_id ? 'user1_deleted_at' : 'user2_deleted_at';
         $conversation->update([$column => now()]);
 
-        broadcast(new ConversationDeleted($conversation, $user->id))->toOthers();
+        $deleteOtherUser = $conversation->getOtherUser($user);
+        broadcast(new ConversationDeleted($conversation, $user->id, $deleteOtherUser->id))->toOthers();
 
         return response()->json(['message' => 'Conversation deleted']);
     }

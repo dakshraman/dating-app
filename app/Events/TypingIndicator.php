@@ -14,6 +14,7 @@ class TypingIndicator implements ShouldBroadcast
     public function __construct(
         public int $conversationId,
         public int $userId,
+        public int $otherUserId,
         public string $userName
     ) {}
 
@@ -21,6 +22,7 @@ class TypingIndicator implements ShouldBroadcast
     {
         return [
             new PrivateChannel("conversation.{$this->conversationId}"),
+            new PrivateChannel("user.{$this->otherUserId}"),
         ];
     }
 

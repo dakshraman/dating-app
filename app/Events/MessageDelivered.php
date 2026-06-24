@@ -14,13 +14,15 @@ class MessageDelivered implements ShouldBroadcast
     public function __construct(
         public int $conversationId,
         public int $messageId,
-        public int $userId
+        public int $userId,
+        public int $otherUserId
     ) {}
 
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel("conversation.{$this->conversationId}"),
+            new PrivateChannel("user.{$this->otherUserId}"),
         ];
     }
 

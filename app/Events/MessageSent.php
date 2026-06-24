@@ -18,8 +18,15 @@ class MessageSent implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
+        $this->message->loadMissing('conversation');
+
+        $otherUserId = $this->message->sender_id === $this->message->conversation->user1_id
+            ? $this->message->conversation->user2_id
+            : $this->message->conversation->user1_id;
+
         return [
             new PrivateChannel("conversation.{$this->message->conversation_id}"),
+            new PrivateChannel("user.{$otherUserId}"),
         ];
     }
 
@@ -36,6 +43,7 @@ class MessageSent implements ShouldBroadcast
             'status' => $this->message->status,
             'metadata' => $this->message->metadata,
             'read_at' => $this->message->read_at,
+            'expires_at' => $this->message->expires_at,
             'created_at' => $this->message->created_at,
             'reply_to' => $replyTo ? [
                 'id' => $replyTo->id,
