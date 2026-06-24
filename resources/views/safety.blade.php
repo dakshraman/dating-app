@@ -3,7 +3,7 @@
 @section('title', 'Safety Tips | IndieDate')
 
 @section('content')
-<section class="w-full max-w-4xl mx-auto py-12 fade-in-up">
+<section class="w-full max-w-4xl mx-auto py-12 reveal">
     <div class="glass-panel-active rounded-[32px] p-xl lg:p-[60px] border border-white/10">
         <div class="inline-flex items-center gap-xs px-md py-xs rounded-full bg-primary/20 border border-primary/50 mb-lg">
             <span class="material-symbols-outlined text-primary text-[16px]">health_and_safety</span>
