@@ -293,8 +293,15 @@ class ServiceStatus extends Page
         }
 
         if ($result['success']) {
+            $pastTense = match ($action) {
+                'start' => 'Started',
+                'stop' => 'Stopped',
+                'restart' => 'Restarted',
+                default => ucfirst($action) . 'ed',
+            };
+            
             Notification::make()
-                ->title(ucfirst($action).'d '.$name.' successfully')
+                ->title("{$pastTense} {$name} successfully")
                 ->success()
                 ->send();
         } else {
