@@ -4,12 +4,13 @@ namespace App\Notifications;
 
 use App\Models\UserMatch;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
 use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 
-class NewMatchNotification extends Notification
+class NewMatchNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

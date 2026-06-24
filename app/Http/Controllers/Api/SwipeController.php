@@ -9,9 +9,11 @@ use App\Models\DailySwipeUsage;
 use App\Models\Swipe;
 use App\Models\User;
 use App\Models\UserMatch;
+use App\Notifications\NewMatchNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
 class SwipeController extends Controller
@@ -113,6 +115,11 @@ class SwipeController extends Controller
                     ->first();
 
                 broadcast(new NewMatch($match));
+
+                $otherUser = $match->getOtherUser($user);
+                if ($otherUser && filled($otherUser->fcm_tokens)) {
+                    Notification::send($otherUser, new NewMatchNotification($match));
+                }
             }
         }
 
