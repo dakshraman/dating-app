@@ -27,6 +27,7 @@ class MessageSent implements ShouldBroadcast
         return [
             new PrivateChannel("conversation.{$this->message->conversation_id}"),
             new PrivateChannel("user.{$otherUserId}"),
+            new PrivateChannel("user.{$this->message->sender_id}"),
         ];
     }
 

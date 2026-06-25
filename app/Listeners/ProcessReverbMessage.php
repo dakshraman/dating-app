@@ -175,7 +175,7 @@ class ProcessReverbMessage
         $message->update(['metadata' => array_merge($message->metadata ?? [], ['reactions' => $reactions])]);
         $message->load(['sender', 'replyTo.sender']);
 
-        broadcast(new MessageSent($message))->toOthers();
+        broadcast(new MessageSent($message));
     }
 
     protected function handleDelete(User $user, Conversation $conversation, array $payload): void
@@ -223,7 +223,7 @@ class ProcessReverbMessage
         $message = $conversation->messages()->create($messageData);
         $message->load(['sender', 'replyTo.sender']);
 
-        broadcast(new MessageSent($message))->toOthers();
+        broadcast(new MessageSent($message));
     }
 
     protected function handleTypingIndicator(User $user, Conversation $conversation, array $payload): void
