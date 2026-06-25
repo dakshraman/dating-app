@@ -177,6 +177,22 @@ class ChatController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        // Restrict sharing of social media handles, websites, links, and phone numbers
+        if ($request->has('content') && (! $request->has('type') || $request->input('type') === 'text')) {
+            $content = $request->input('content');
+            
+            // Regex patterns
+            $urlPattern = '/(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?)/i';
+            $socialPattern = '/(?:instagram\.com\/|snapchat\.com\/add\/|t\.me\/|wa\.me\/|@)[a-zA-Z0-9_.-]+/i';
+            $phonePattern = '/(?:\+?\d{1,3}[\s-]?)?(?:\(?\d{3}\)?[\s-]?)?\d{3}[\s-]?\d{4}/';
+
+            if (preg_match($urlPattern, $content) || preg_match($socialPattern, $content) || preg_match($phonePattern, $content)) {
+                return response()->json([
+                    'message' => 'Sharing links, social media handles, or phone numbers is not allowed for your safety.'
+                ], 422);
+            }
+        }
+
         $messageData = [
             'sender_id' => $user->id,
             'content' => $request->input('content', ''),
