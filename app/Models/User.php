@@ -216,7 +216,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasActiveSubscription() ? PHP_INT_MAX : (int) ($this->remaining_super_likes ?? 0);
     }
 
-    public function scopeDiscoverable($query, User $user)
+    public function scopeDiscoverable(\Illuminate\Database\Eloquent\Builder $query, User $user)
     {
         $pref = $user->preferences;
 
