@@ -29,6 +29,9 @@ class ProcessReverbMessage
         $eventName = $data['event'];
         $channel = $data['channel'] ?? '';
         $payload = $data['data'] ?? [];
+        if (is_string($payload)) {
+            $payload = json_decode($payload, true) ?: [];
+        }
 
         if (! str_starts_with($eventName, 'client-')) {
             return;
