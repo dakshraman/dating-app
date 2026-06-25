@@ -196,7 +196,7 @@ class ChatController extends Controller
 
         broadcast(new MessageSent($message))->toOthers();
 
-        if ($otherUser && filled($otherUser->fcm_tokens)) {
+        if ($otherUser && filled($otherUser->fcm_token)) {
             Notification::send($otherUser, new NewMessageNotification($message));
         }
 

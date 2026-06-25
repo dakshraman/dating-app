@@ -361,7 +361,7 @@ class ServiceStatus extends Page
         }
 
         $user = auth()->user();
-        $tokenCount = is_array($user->fcm_tokens) ? count($user->fcm_tokens) : 0;
+        $tokenCount = $user->fcm_token ? 1 : 0;
 
         Notification::make()
             ->title('FCM Configuration OK')

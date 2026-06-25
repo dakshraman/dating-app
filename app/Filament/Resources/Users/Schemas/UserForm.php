@@ -54,7 +54,7 @@ class UserForm
                 DateTimePicker::make('last_active_at'),
                 TextInput::make('phone')
                     ->tel(),
-                Textarea::make('fcm_tokens')
+                TextInput::make('fcm_token')
                     ->columnSpanFull(),
             ]);
     }

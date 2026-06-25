@@ -117,7 +117,7 @@ class SwipeController extends Controller
                 broadcast(new NewMatch($match));
 
                 $otherUser = $match->getOtherUser($user);
-                if ($otherUser && filled($otherUser->fcm_tokens)) {
+                if ($otherUser && filled($otherUser->fcm_token)) {
                     Notification::send($otherUser, new NewMatchNotification($match));
                 }
             }

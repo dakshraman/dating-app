@@ -77,15 +77,15 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
     Route::put('/user/fcm-token', function (Request $request) {
         $request->validate(['fcm_token' => 'required|string']);
-        $request->user()->update(['fcm_tokens' => [$request->fcm_token]]);
+        $request->user()->update(['fcm_token' => $request->fcm_token]);
 
         return response()->json(['message' => 'FCM token updated']);
     });
 
     Route::delete('/user/fcm-token/{token}', function (Request $request, $token) {
-        $tokens = $request->user()->fcm_tokens ?? [];
-        $tokens = array_values(array_filter($tokens, fn ($t) => $t !== $token));
-        $request->user()->update(['fcm_tokens' => $tokens]);
+        if ($request->user()->fcm_token === $token) {
+            $request->user()->update(['fcm_token' => null]);
+        }
 
         return response()->json(['message' => 'FCM token removed']);
     });
