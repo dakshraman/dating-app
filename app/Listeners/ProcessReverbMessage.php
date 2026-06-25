@@ -19,8 +19,11 @@ class ProcessReverbMessage
 {
     public function handle(MessageReceived $event): void
     {
+        \Illuminate\Support\Facades\Log::info('[REVERB RAW IN]', ['message' => $event->message]);
+        
         $data = json_decode($event->message, true);
         if (! $data || ! isset($data['event'])) {
+            \Illuminate\Support\Facades\Log::warning('[REVERB IN] Invalid JSON or missing event', ['raw' => $event->message]);
             return;
         }
 
