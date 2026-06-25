@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Notifications\NewMessageNotification;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
@@ -28,7 +29,7 @@ class ChatController extends Controller
             ->with(['user1', 'user2', 'match'])
             ->orderBy('last_message_at', 'desc')
             ->get()
-            ->map(function ($conv) use ($user) {
+            ->map(function (Conversation $conv) use ($user) {
                 $other = $conv->getOtherUser($user);
 
                 if ($other->blockedUsers()->where('blocked_id', $user->id)->exists()) {
@@ -49,6 +50,7 @@ class ChatController extends Controller
                         'name' => $other->name,
                         'profile_photo' => $other->profile_photo,
                         'last_seen_at' => $other->last_seen_at,
+                        'last_active_at' => $other->last_active_at,
                         'is_online' => $other->last_seen_at && $other->last_seen_at->gt(now()->subMinutes(2)),
                     ],
                     'last_message' => $lastMessage ? [
@@ -177,10 +179,10 @@ class ChatController extends Controller
 
         $messageData = [
             'sender_id' => $user->id,
-            'content' => $request->content ?? '',
-            'type' => $request->type ?? 'text',
-            'reply_to_id' => $request->reply_to_id,
-            'metadata' => $request->metadata,
+            'content' => $request->input('content', ''),
+            'type' => $request->input('type', 'text'),
+            'reply_to_id' => $request->input('reply_to_id'),
+            'metadata' => $request->input('metadata'),
             'status' => 'sent',
         ];
 
@@ -241,9 +243,12 @@ class ChatController extends Controller
 
         $path = $request->file('file')->store('chat-media', 'public');
 
+        /** @var FilesystemAdapter $disk */
+        $disk = Storage::disk('public');
+
         return response()->json([
-            'url' => Storage::disk('public')->url($path),
-            'type' => $request->type,
+            'url' => $disk->url($path),
+            'type' => $request->input('type'),
         ], 201);
     }
 
@@ -292,9 +297,27 @@ class ChatController extends Controller
 
         $conversation->update(['vanish_mode' => $request->mode]);
 
+        $modeLabels = [
+            'off' => 'Off',
+            '24h' => '24 Hours',
+            'after_seen' => 'After Seen',
+        ];
+
+        $message = $conversation->messages()->create([
+            'sender_id' => $user->id,
+            'content' => 'Vanish mode set to '.($modeLabels[$request->mode] ?? $request->mode),
+            'type' => 'vanish_update',
+            'status' => 'sent',
+        ]);
+
+        $message->load('sender');
+
+        broadcast(new MessageSent($message))->toOthers();
+
         return response()->json([
             'message' => 'Vanish mode updated',
             'vanish_mode' => $conversation->vanish_mode,
+            'system_message' => $message,
         ]);
     }
 

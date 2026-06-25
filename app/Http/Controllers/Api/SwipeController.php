@@ -156,6 +156,11 @@ class SwipeController extends Controller
         }
 
         if ($direction === 'like') {
+            $todaySwipes = Swipe::where('swiper_id', $user->id)
+                ->whereDate('created_at', now()->toDateString())
+                ->count();
+
+            /** @var DailySwipeUsage|null $usage */
             $usage = DailySwipeUsage::where('user_id', $user->id)
                 ->whereDate('date', today())
                 ->first();
@@ -222,7 +227,7 @@ class SwipeController extends Controller
             ->with(['user1', 'user2', 'conversation'])
             ->orderBy('matched_at', 'desc')
             ->get()
-            ->map(function ($match) use ($user) {
+            ->map(function (UserMatch $match) use ($user) {
                 $other = $match->getOtherUser($user);
 
                 return [
@@ -232,6 +237,7 @@ class SwipeController extends Controller
                         'id' => $other->id,
                         'name' => $other->name,
                         'profile_photo' => $other->profile_photo,
+                        'last_active_at' => $other->last_active_at,
                     ],
                     'conversation_id' => $match->conversation?->id,
                 ];
@@ -240,7 +246,7 @@ class SwipeController extends Controller
         return response()->json($matches);
     }
 
-    public function destroy(Request $request, $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
         $match = UserMatch::where('id', $id)
             ->where(function ($q) use ($request) {
@@ -291,7 +297,7 @@ class SwipeController extends Controller
         );
     }
 
-    public function destroySwipe(Request $request, $swiped_id): JsonResponse
+    public function destroySwipe(Request $request, string $swiped_id): JsonResponse
     {
         $swipe = Swipe::where('swiper_id', $request->user()->id)
             ->where('swiped_id', $swiped_id)
