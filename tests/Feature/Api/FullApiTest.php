@@ -247,10 +247,6 @@ class FullApiTest extends TestCase
         $res = $this->postJson('/api/user/report', ['reported_id' => $user2->id, 'reason' => 'spam']);
         $this->assertEquals(200, $res->status(), 'REPORT');
 
-        // ===== LAST SEEN =====
-        $res = $this->postJson('/api/user/last-seen');
-        $this->assertEquals(200, $res->status(), 'LAST SEEN');
-
         // ===== FCM TOKEN =====
         $res = $this->putJson('/api/user/fcm-token', ['fcm_token' => 'test-fcm-token-123']);
         $this->assertEquals(200, $res->status(), 'FCM TOKEN');

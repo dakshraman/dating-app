@@ -7,13 +7,15 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'last_seen_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_token', 'is_banned', 'ban_reason', 'banned_at', 'mask_name'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_token', 'is_banned', 'ban_reason', 'banned_at', 'mask_name'])]
 #[Hidden(['password', 'remember_token'])]
 /**
  * @property int $id
@@ -22,7 +24,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $password
  * @property string|null $phone
  * @property string|null $gender
- * @property \Illuminate\Support\Carbon|null $birth_date
+ * @property Carbon|null $birth_date
  * @property string|null $bio
  * @property string|null $location
  * @property float|null $latitude
@@ -31,17 +33,16 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $verification_photo
  * @property bool $is_verified
  * @property bool $is_active
- * @property \Illuminate\Support\Carbon|null $last_active_at
- * @property \Illuminate\Support\Carbon|null $last_seen_at
+ * @property Carbon|null $last_active_at
  * @property int $remaining_swipes
  * @property int $remaining_super_likes
  * @property string|null $fcm_token
  * @property bool $is_banned
  * @property string|null $ban_reason
- * @property \Illuminate\Support\Carbon|null $banned_at
+ * @property Carbon|null $banned_at
  * @property bool $mask_name
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class User extends Authenticatable implements FilamentUser
 {
@@ -59,7 +60,6 @@ class User extends Authenticatable implements FilamentUser
             'mask_name' => 'boolean',
             'banned_at' => 'datetime',
             'last_active_at' => 'datetime',
-            'last_seen_at' => 'datetime',
             'password' => 'hashed',
             'fcm_token' => 'string',
             'remaining_swipes' => 'integer',
@@ -216,7 +216,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasActiveSubscription() ? PHP_INT_MAX : (int) ($this->remaining_super_likes ?? 0);
     }
 
-    public function scopeDiscoverable(\Illuminate\Database\Eloquent\Builder $query, User $user)
+    public function scopeDiscoverable(Builder $query, User $user)
     {
         $pref = $user->preferences;
 

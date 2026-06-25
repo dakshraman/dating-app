@@ -48,8 +48,8 @@ class ChatController extends Controller
                         'id' => $other->id,
                         'name' => $other->name,
                         'profile_photo' => $other->profile_photo,
-                        'last_seen_at' => $other->last_seen_at,
-                        'is_online' => $other->last_seen_at && $other->last_seen_at->gt(now()->subMinutes(2)),
+                        'last_active_at' => $other->last_active_at,
+                        'is_online' => $other->last_active_at && $other->last_active_at->gt(now()->subMinutes(2)),
                     ],
                     'last_message' => $lastMessage ? [
                         'id' => $lastMessage->id,
@@ -347,13 +347,6 @@ class ChatController extends Controller
         broadcast(new ConversationDeleted($conversation, $user->id, $deleteOtherUser->id))->toOthers();
 
         return response()->json(['message' => 'Conversation deleted']);
-    }
-
-    public function updateLastSeen(Request $request): JsonResponse
-    {
-        $request->user()->update(['last_seen_at' => now()]);
-
-        return response()->json(['message' => 'Updated']);
     }
 
     public function reactToMessage(Request $request, Conversation $conversation, Message $message): JsonResponse

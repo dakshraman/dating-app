@@ -23,7 +23,7 @@ Route::post('/forgot-password/send-otp', [ForgotPasswordController::class, 'send
 Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])->middleware('throttle:10,60');
 Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:5,60');
 
-Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+Route::middleware(['auth:sanctum', 'last.active', 'throttle:60,1'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
@@ -54,7 +54,6 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::delete('/conversations/{conversation}/typing', [ChatController::class, 'stopTyping'])->middleware('throttle:60,1');
 
     Route::post('/chat/upload', [ChatController::class, 'uploadMedia']);
-    Route::post('/user/last-seen', [ChatController::class, 'updateLastSeen']);
     Route::post('/conversations/{conversation}/messages/{message}/react', [ChatController::class, 'reactToMessage']);
     Route::delete('/conversations/{conversation}/messages/{message}', [ChatController::class, 'deleteMessage']);
 
