@@ -77,12 +77,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
 
     Route::put('/user/fcm-token', function (Request $request) {
         $request->validate(['fcm_token' => 'required|string']);
-        $tokens = $request->user()->fcm_tokens ?? [];
-        $token = $request->fcm_token;
-        if (! in_array($token, $tokens)) {
-            $tokens[] = $token;
-        }
-        $request->user()->update(['fcm_tokens' => $tokens]);
+        $request->user()->update(['fcm_tokens' => [$request->fcm_token]]);
 
         return response()->json(['message' => 'FCM token updated']);
     });

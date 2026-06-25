@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\GoogleProvider;
 
 class AuthController extends Controller
 {
@@ -112,15 +113,16 @@ class AuthController extends Controller
 
     public function redirectToGoogle()
     {
-        /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+        /** @var GoogleProvider $driver */
         $driver = Socialite::driver('google');
+
         return $driver->stateless()->redirect();
     }
 
     public function handleGoogleCallback(Request $request): JsonResponse
     {
         try {
-            /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+            /** @var GoogleProvider $driver */
             $driver = Socialite::driver('google');
             $googleUser = $driver->stateless()->user();
         } catch (\Exception $e) {

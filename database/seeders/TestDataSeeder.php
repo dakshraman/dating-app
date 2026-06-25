@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserMatch;
 use App\Models\UserPhoto;
 use App\Models\UserPreference;
+use Faker\Factory;
 use Illuminate\Database\Seeder;
 
 class TestDataSeeder extends Seeder
@@ -32,7 +33,7 @@ class TestDataSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $faker = \Faker\Factory::create();
+        $faker = Factory::create();
         $users = collect();
         for ($i = 0; $i < 50; $i++) {
             $gender = $faker->randomElement(['male', 'female']);
@@ -42,8 +43,8 @@ class TestDataSeeder extends Seeder
                 'gender' => $gender,
                 'birth_date' => $faker->dateTimeBetween('-40 years', '-20 years')->format('Y-m-d'),
                 'bio' => $faker->text(100),
-                'location' => $faker->city . ', ' . $faker->stateAbbr,
-                'photo' => 'https://i.pravatar.cc/400?u=' . $faker->uuid,
+                'location' => $faker->city.', '.$faker->stateAbbr,
+                'photo' => 'https://i.pravatar.cc/400?u='.$faker->uuid,
             ]);
         }
 
