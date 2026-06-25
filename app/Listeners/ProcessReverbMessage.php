@@ -5,9 +5,12 @@ namespace App\Listeners;
 use App\Events\MessageDelivered;
 use App\Events\MessageRead;
 use App\Events\MessageSent;
+use App\Events\TypingIndicator;
+use App\Events\TypingStopped;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Notifications\NewMessageNotification;
+use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Reverb\Events\MessageReceived;
@@ -40,13 +43,14 @@ class ProcessReverbMessage
             return;
         }
 
+        /** @var mixed $connection */
         $connection = $event->connection;
         $userId = $connection->data('user_id') ?? $connection->data('userId');
         if (! $userId) {
             return;
         }
 
-        $user = \App\Models\User::find($userId);
+        $user = User::find($userId);
         if (! $user) {
             return;
         }
@@ -61,11 +65,13 @@ class ProcessReverbMessage
             'client-MessageReact' => $this->handleReact($user, $conversation, $payload),
             'client-MessageDelete' => $this->handleDelete($user, $conversation, $payload),
             'client-VanishToggle' => $this->handleVanishToggle($user, $conversation, $payload),
+            'client-TypingIndicator' => $this->handleTypingIndicator($user, $conversation, $payload),
+            'client-TypingStopped' => $this->handleTypingStopped($user, $conversation, $payload),
             default => null,
         };
     }
 
-    protected function handleSend($user, Conversation $conversation, array $payload): void
+    protected function handleSend(User $user, Conversation $conversation, array $payload): void
     {
         $otherUser = $conversation->getOtherUser($user);
 
@@ -129,17 +135,17 @@ class ProcessReverbMessage
         }
     }
 
-    protected function handleRead($user, Conversation $conversation, array $payload): void
+    protected function handleRead(User $user, Conversation $conversation, array $payload): void
     {
         $conversation->messages()
             ->where('sender_id', '!=', $user->id)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        broadcast(new MessageRead($conversation->id, 0, $user->id));
+        broadcast(new MessageRead($conversation, $user, 0));
     }
 
-    protected function handleReact($user, Conversation $conversation, array $payload): void
+    protected function handleReact(User $user, Conversation $conversation, array $payload): void
     {
         $messageId = $payload['message_id'] ?? null;
         $emoji = $payload['emoji'] ?? null;
@@ -167,7 +173,7 @@ class ProcessReverbMessage
         broadcast(new MessageSent($message))->toOthers();
     }
 
-    protected function handleDelete($user, Conversation $conversation, array $payload): void
+    protected function handleDelete(User $user, Conversation $conversation, array $payload): void
     {
         $messageId = $payload['message_id'] ?? null;
         if (! $messageId) {
@@ -182,7 +188,7 @@ class ProcessReverbMessage
         $message->delete();
     }
 
-    protected function handleVanishToggle($user, Conversation $conversation, array $payload): void
+    protected function handleVanishToggle(User $user, Conversation $conversation, array $payload): void
     {
         $mode = $payload['mode'] ?? 'off';
         if (! in_array($mode, ['off', '24h', 'after_seen'])) {
@@ -211,5 +217,17 @@ class ProcessReverbMessage
         $message->load(['sender', 'replyTo.sender']);
 
         broadcast(new MessageSent($message))->toOthers();
+    }
+
+    protected function handleTypingIndicator(User $user, Conversation $conversation, array $payload): void
+    {
+        $otherUser = $conversation->getOtherUser($user);
+        broadcast(new TypingIndicator($conversation->id, $user->id, $otherUser->id, $user->name));
+    }
+
+    protected function handleTypingStopped(User $user, Conversation $conversation, array $payload): void
+    {
+        $otherUser = $conversation->getOtherUser($user);
+        broadcast(new TypingStopped($conversation->id, $user->id, $otherUser->id));
     }
 }
