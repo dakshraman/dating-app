@@ -24,6 +24,8 @@ class ProcessReverbMessage
             return;
         }
 
+        \Illuminate\Support\Facades\Log::info('[REVERB IN] Message Received', $data);
+
         $eventName = $data['event'];
         $channel = $data['channel'] ?? '';
         $payload = $data['data'] ?? [];
@@ -73,6 +75,7 @@ class ProcessReverbMessage
 
     protected function handleSend(User $user, Conversation $conversation, array $payload): void
     {
+        \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Sending message for user {$user->id} in conv {$conversation->id}");
         $otherUser = $conversation->getOtherUser($user);
 
         if ($otherUser->blockedUsers()->where('blocked_id', $user->id)->exists()) {
@@ -137,6 +140,7 @@ class ProcessReverbMessage
 
     protected function handleRead(User $user, Conversation $conversation, array $payload): void
     {
+        \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Read message for user {$user->id} in conv {$conversation->id}");
         $conversation->messages()
             ->where('sender_id', '!=', $user->id)
             ->whereNull('read_at')
@@ -147,6 +151,7 @@ class ProcessReverbMessage
 
     protected function handleReact(User $user, Conversation $conversation, array $payload): void
     {
+        \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] React message for user {$user->id} in conv {$conversation->id}", $payload);
         $messageId = $payload['message_id'] ?? null;
         $emoji = $payload['emoji'] ?? null;
         if (! $messageId || ! $emoji) {
@@ -175,6 +180,7 @@ class ProcessReverbMessage
 
     protected function handleDelete(User $user, Conversation $conversation, array $payload): void
     {
+        \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Delete message for user {$user->id} in conv {$conversation->id}", $payload);
         $messageId = $payload['message_id'] ?? null;
         if (! $messageId) {
             return;
@@ -190,6 +196,7 @@ class ProcessReverbMessage
 
     protected function handleVanishToggle(User $user, Conversation $conversation, array $payload): void
     {
+        \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Vanish toggle for user {$user->id} in conv {$conversation->id}", $payload);
         $mode = $payload['mode'] ?? 'off';
         if (! in_array($mode, ['off', '24h', 'after_seen'])) {
             return;
@@ -221,12 +228,14 @@ class ProcessReverbMessage
 
     protected function handleTypingIndicator(User $user, Conversation $conversation, array $payload): void
     {
+        \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Typing indicator for user {$user->id} in conv {$conversation->id}");
         $otherUser = $conversation->getOtherUser($user);
         broadcast(new TypingIndicator($conversation->id, $user->id, $otherUser->id, $user->name));
     }
 
     protected function handleTypingStopped(User $user, Conversation $conversation, array $payload): void
     {
+        \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Typing stopped for user {$user->id} in conv {$conversation->id}");
         $otherUser = $conversation->getOtherUser($user);
         broadcast(new TypingStopped($conversation->id, $user->id, $otherUser->id));
     }
