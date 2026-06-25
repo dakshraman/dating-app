@@ -258,6 +258,7 @@ class ProfileController extends Controller
                 'photos' => $profile->photos,
                 'interests' => $profile->interests,
                 'is_boosted' => $profile->is_boosted,
+                'last_active_at' => $profile->last_active_at,
                 'prompts' => $profile->prompts,
                 'compatibility' => $user->compatibilityWith($profile),
             ];
