@@ -178,7 +178,19 @@ class SwipeController extends Controller
 
         $likes = Swipe::where('swiped_id', $user->id)
             ->where('direction', 'like')
-            ->with('swiper:id,name,profile_photo,bio,birth_date')
+            ->whereNotExists(function ($query) use ($user) {
+                $query->select(DB::raw(1))
+                    ->from('matches')
+                    ->where(function ($q) use ($user) {
+                        $q->where('user1_id', $user->id)
+                            ->whereColumn('user2_id', 'swipes.swiper_id');
+                    })
+                    ->orWhere(function ($q) use ($user) {
+                        $q->where('user2_id', $user->id)
+                            ->whereColumn('user1_id', 'swipes.swiper_id');
+                    });
+            })
+            ->with('swiper:id,name,profile_photo,bio,birth_date,last_active_at')
             ->latest()
             ->get();
 
@@ -192,6 +204,7 @@ class SwipeController extends Controller
                     'age' => $swipe->swiper->age(),
                     'is_super_like' => $swipe->is_super_like,
                     'swiped_at' => $swipe->created_at,
+                    'last_active_at' => $swipe->swiper->last_active_at,
                 ];
             })
         );
