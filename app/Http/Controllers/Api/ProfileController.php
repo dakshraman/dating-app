@@ -118,7 +118,7 @@ class ProfileController extends Controller
         return response()->json($photo, 201);
     }
 
-    public function deletePhoto(Request $request, $id): JsonResponse
+    public function deletePhoto(Request $request, int $id): JsonResponse
     {
         $photo = $request->user()->photos()->findOrFail($id);
         $photo->delete();
@@ -232,8 +232,7 @@ class ProfileController extends Controller
             }
         }
 
-        $query->orderByDesc('is_boosted')
-            ->orderByDesc('created_at');
+        $query->orderByDesc('created_at');
 
         $profiles = $query->cursorPaginate(20);
 
@@ -258,10 +257,11 @@ class ProfileController extends Controller
                 'income_range' => $profile->income_range,
                 'photos' => $profile->photos,
                 'interests' => $profile->interests,
+                'is_boosted' => $profile->is_boosted,
                 'prompts' => $profile->prompts,
                 'compatibility' => $user->compatibilityWith($profile),
             ];
-        });
+        })->sortByDesc('is_boosted')->values()->all();
 
         return response()->json([
             'data' => $mapped,
@@ -270,7 +270,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function show(Request $request, $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $profile = User::with([
             'photos' => fn ($q) => $q->where('is_approved', true),
