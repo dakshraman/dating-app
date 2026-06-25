@@ -199,24 +199,24 @@ class User extends Authenticatable implements FilamentUser
             ->values()
             ->toArray();
 
-        return $query->where('id', '!=', $user->id)
-            ->where('is_active', true)
-            ->where('is_banned', false)
-            ->whereNotNull('birth_date')
-            ->whereNotNull('gender')
-            ->whereNotNull('profile_photo')
-            ->when($excludeIds, fn ($q) => $q->whereNotIn('id', $excludeIds))
+        return $query->where('users.id', '!=', $user->id)
+            ->where('users.is_active', true)
+            ->where('users.is_banned', false)
+            ->whereNotNull('users.birth_date')
+            ->whereNotNull('users.gender')
+            ->whereNotNull('users.profile_photo')
+            ->when($excludeIds, fn ($q) => $q->whereNotIn('users.id', $excludeIds))
             ->when($pref && $pref->gender_preference, function ($q) use ($pref) {
-                $q->where('gender', $pref->gender_preference);
+                $q->where('users.gender', $pref->gender_preference);
             })
             ->when($pref?->religion_preference, function ($q) use ($pref) {
-                $q->where('religion', $pref->religion_preference);
+                $q->where('users.religion', $pref->religion_preference);
             })
             ->when($pref?->mother_tongue_preference, function ($q) use ($pref) {
-                $q->where('mother_tongue', $pref->mother_tongue_preference);
+                $q->where('users.mother_tongue', $pref->mother_tongue_preference);
             })
             ->when($pref?->dietary_preference, function ($q) use ($pref) {
-                $q->where('dietary_preference', $pref->dietary_preference);
+                $q->where('users.dietary_preference', $pref->dietary_preference);
             });
     }
 }
