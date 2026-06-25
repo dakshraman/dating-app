@@ -32,6 +32,8 @@ class AuthController extends Controller
             'education' => 'nullable|string|max:255',
             'profession' => 'nullable|string|max:255',
             'income_range' => 'nullable|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
         ]);
 
         if ($validator->fails()) {
@@ -47,6 +49,8 @@ class AuthController extends Controller
             'birth_date' => $request->birth_date,
             'state' => $request->state,
             'city' => $request->city,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
             'religion' => $request->religion,
             'mother_tongue' => $request->mother_tongue,
             'dietary_preference' => $request->dietary_preference,
