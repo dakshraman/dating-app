@@ -15,7 +15,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10
 
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
-Route::post('/auth/google/mobile', [AuthController::class, 'handleGoogleMobile'])->middleware('throttle:5,60');
+Route::post('/auth/google/mobile', [AuthController::class, 'handleGoogleMobile']);
 
 Route::post('/webhooks/revenuecat', [WebhookController::class, 'revenuecat']);
 
