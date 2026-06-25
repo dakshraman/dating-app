@@ -233,7 +233,7 @@ class ProfileController extends Controller
         }
 
         $query->orderByDesc('is_boosted')
-            ->orderByDesc('last_active_at');
+            ->orderByDesc('created_at');
 
         $profiles = $query->cursorPaginate(20);
 
@@ -270,7 +270,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function show($id): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
         $profile = User::with([
             'photos' => fn ($q) => $q->where('is_approved', true),
@@ -278,15 +278,17 @@ class ProfileController extends Controller
             'prompts',
         ])->findOrFail($id);
 
-        if (auth()->check() && auth()->id() !== $profile->id) {
+        $user = $request->user();
+
+        if ($user && $user->id !== $profile->id) {
             ProfileVisit::firstOrCreate([
-                'visitor_id' => auth()->id(),
+                'visitor_id' => $user->id,
                 'visited_id' => $profile->id,
             ]);
         }
 
-        $compatibility = auth()->check()
-            ? auth()->user()->compatibilityWith($profile)
+        $compatibility = $user
+            ? $user->compatibilityWith($profile)
             : null;
 
         return response()->json([
