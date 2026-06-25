@@ -156,13 +156,14 @@ class SwipeController extends Controller
         }
 
         if ($direction === 'like') {
-            $todaySwipes = Swipe::where('swiper_id', $user->id)
+            $todaySwipes = Swipe::query()
+                ->where('swiper_id', $user->id)
                 ->whereDate('created_at', now()->toDateString())
                 ->count();
 
             /** @var DailySwipeUsage|null $usage */
             $usage = DailySwipeUsage::where('user_id', $user->id)
-                ->whereDate('date', today())
+                ->where('date', today()->toDateString())
                 ->first();
 
             if ($usage) {

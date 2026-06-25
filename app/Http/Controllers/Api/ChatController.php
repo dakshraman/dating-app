@@ -129,6 +129,7 @@ class ChatController extends Controller
                         'id' => $msg->sender->id,
                         'name' => $msg->sender->name,
                         'profile_photo' => $msg->sender->profile_photo,
+                        'last_active_at' => $msg->sender->last_active_at,
                     ],
                 ];
             });
@@ -226,6 +227,7 @@ class ChatController extends Controller
                 'id' => $message->sender->id,
                 'name' => $message->sender->name,
                 'profile_photo' => $message->sender->profile_photo,
+                'last_active_at' => $message->sender->last_active_at,
             ],
         ], 201);
     }
