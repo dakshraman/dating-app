@@ -15,6 +15,34 @@ use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'last_seen_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_token', 'is_banned', 'ban_reason', 'banned_at', 'mask_name'])]
 #[Hidden(['password', 'remember_token'])]
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $email
+ * @property string $password
+ * @property string|null $phone
+ * @property string|null $gender
+ * @property \Illuminate\Support\Carbon|null $birth_date
+ * @property string|null $bio
+ * @property string|null $location
+ * @property float|null $latitude
+ * @property float|null $longitude
+ * @property string|null $profile_photo
+ * @property string|null $verification_photo
+ * @property bool $is_verified
+ * @property bool $is_active
+ * @property \Illuminate\Support\Carbon|null $last_active_at
+ * @property \Illuminate\Support\Carbon|null $last_seen_at
+ * @property int $remaining_swipes
+ * @property int $remaining_super_likes
+ * @property string|null $fcm_token
+ * @property bool $is_banned
+ * @property string|null $ban_reason
+ * @property \Illuminate\Support\Carbon|null $banned_at
+ * @property bool $mask_name
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */

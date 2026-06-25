@@ -5,6 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int|null $match_id
+ * @property int $user1_id
+ * @property int $user2_id
+ * @property \Illuminate\Support\Carbon|null $last_message_at
+ * @property \Illuminate\Support\Carbon|null $user1_deleted_at
+ * @property \Illuminate\Support\Carbon|null $user2_deleted_at
+ * @property string $vanish_mode
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class Conversation extends Model
 {
     protected $fillable = [

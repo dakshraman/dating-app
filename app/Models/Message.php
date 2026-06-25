@@ -4,6 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $conversation_id
+ * @property int $sender_id
+ * @property string $content
+ * @property string $type
+ * @property int|null $reply_to_id
+ * @property array|null $metadata
+ * @property string $status
+ * @property \Illuminate\Support\Carbon|null $read_at
+ * @property \Illuminate\Support\Carbon|null $expires_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class Message extends Model
 {
     protected $fillable = ['conversation_id', 'sender_id', 'content', 'type', 'reply_to_id', 'metadata', 'status', 'read_at', 'expires_at'];
