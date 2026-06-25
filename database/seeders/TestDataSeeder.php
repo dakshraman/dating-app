@@ -32,16 +32,20 @@ class TestDataSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        $users = collect([
-            ['name' => 'Sarah Johnson', 'email' => 'sarah@test.com', 'gender' => 'female', 'birth_date' => '1998-03-15', 'bio' => 'Love traveling and trying new foods! 🌍', 'location' => 'Los Angeles, CA', 'photo' => 'https://i.pravatar.cc/400?u=sarah'],
-            ['name' => 'Mike Chen', 'email' => 'mike@test.com', 'gender' => 'male', 'birth_date' => '1996-07-22', 'bio' => 'Photographer & coffee enthusiast 📸', 'location' => 'New York, NY', 'photo' => 'https://i.pravatar.cc/400?u=mike'],
-            ['name' => 'Emily Davis', 'email' => 'emily@test.com', 'gender' => 'female', 'birth_date' => '1999-11-08', 'bio' => 'Yoga instructor. Finding my zen 🧘‍♀️', 'location' => 'Austin, TX', 'photo' => 'https://i.pravatar.cc/400?u=emily'],
-            ['name' => 'James Wilson', 'email' => 'james@test.com', 'gender' => 'male', 'birth_date' => '1995-05-30', 'bio' => 'Guitarist and outdoor enthusiast 🎸', 'location' => 'Seattle, WA', 'photo' => 'https://i.pravatar.cc/400?u=james'],
-            ['name' => 'Sophia Martinez', 'email' => 'sophia@test.com', 'gender' => 'female', 'birth_date' => '1997-09-14', 'bio' => 'Book lover & aspiring chef 📚', 'location' => 'Miami, FL', 'photo' => 'https://i.pravatar.cc/400?u=sophia'],
-            ['name' => 'Alex Thompson', 'email' => 'alex@test.com', 'gender' => 'male', 'birth_date' => '1994-12-03', 'bio' => 'Software dev by day, gamer by night 🎮', 'location' => 'San Francisco, CA', 'photo' => 'https://i.pravatar.cc/400?u=alex'],
-            ['name' => 'Olivia Brown', 'email' => 'olivia@test.com', 'gender' => 'female', 'birth_date' => '2000-01-20', 'bio' => 'Dance enthusiast & dog mom 🐕', 'location' => 'Chicago, IL', 'photo' => 'https://i.pravatar.cc/400?u=olivia'],
-            ['name' => 'Ryan Garcia', 'email' => 'ryan@test.com', 'gender' => 'male', 'birth_date' => '1993-08-17', 'bio' => 'Fitness trainer. Let\'s work out! 💪', 'location' => 'Denver, CO', 'photo' => 'https://i.pravatar.cc/400?u=ryan'],
-        ]);
+        $faker = \Faker\Factory::create();
+        $users = collect();
+        for ($i = 0; $i < 50; $i++) {
+            $gender = $faker->randomElement(['male', 'female']);
+            $users->push([
+                'name' => $faker->name($gender === 'male' ? 'male' : 'female'),
+                'email' => $faker->unique()->safeEmail(),
+                'gender' => $gender,
+                'birth_date' => $faker->dateTimeBetween('-40 years', '-20 years')->format('Y-m-d'),
+                'bio' => $faker->text(100),
+                'location' => $faker->city . ', ' . $faker->stateAbbr,
+                'photo' => 'https://i.pravatar.cc/400?u=' . $faker->uuid,
+            ]);
+        }
 
         $createdUsers = $users->map(fn ($data) => User::create([
             'name' => $data['name'],
