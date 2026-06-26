@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
 
 class ProcessReverbMessage
 {
@@ -51,10 +52,10 @@ class ProcessReverbMessage
             return;
         }
 
-        /** @var mixed $connection */
         $connection = $event->connection;
-        $userId = $connection->data('user_id') ?? $connection->data('userId');
+        $userId = $this->getUserIdFromConnection($connection);
         if (! $userId) {
+            \Illuminate\Support\Facades\Log::warning('[REVERB IN] Could not determine user from connection', ['socket_id' => $connection->id()]);
             return;
         }
 
@@ -77,6 +78,28 @@ class ProcessReverbMessage
             'client-TypingStopped' => $this->handleTypingStopped($user, $conversation, $payload),
             default => null,
         };
+    }
+
+    protected function getUserIdFromConnection($connection): ?int
+    {
+        try {
+            $channelManager = app(ChannelManager::class)->for($connection->app());
+            foreach ($channelManager->all() as $name => $channel) {
+                if (preg_match('/^private-user\.(\d+)$/', $name, $matches)) {
+                    $channelConnection = $channel->find($connection);
+                    if ($channelConnection) {
+                        return (int) $matches[1];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('[REVERB] Error finding user from connection', [
+                'error' => $e->getMessage(),
+                'socket_id' => $connection->id(),
+            ]);
+        }
+
+        return null;
     }
 
     protected function handleSend(User $user, Conversation $conversation, array $payload): void
