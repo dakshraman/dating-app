@@ -84,18 +84,39 @@ class ProcessReverbMessage
     {
         try {
             $channelManager = app(ChannelManager::class)->for($connection->app());
-            foreach ($channelManager->all() as $name => $channel) {
+
+            $allChannels = $channelManager->all();
+            $channelCount = is_array($allChannels) ? count($allChannels) : 0;
+
+            \Illuminate\Support\Facades\Log::info('[REVERB] Finding user from connection', [
+                'socket_id' => $connection->id(),
+                'app_id' => $connection->app()->id(),
+                'channel_count' => $channelCount,
+                'channels' => array_keys(is_array($allChannels) ? $allChannels : []),
+            ]);
+
+            foreach ($allChannels as $name => $channel) {
                 if (preg_match('/^private-user\.(\d+)$/', $name, $matches)) {
                     $channelConnection = $channel->find($connection);
+                    \Illuminate\Support\Facades\Log::info('[REVERB] Checking channel', [
+                        'channel' => $name,
+                        'found_connection' => $channelConnection ? 'yes' : 'no',
+                        'connection_id' => $channelConnection?->connection()?->id(),
+                    ]);
                     if ($channelConnection) {
                         return (int) $matches[1];
                     }
                 }
             }
+
+            \Illuminate\Support\Facades\Log::warning('[REVERB] No matching private-user channel found', [
+                'socket_id' => $connection->id(),
+            ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('[REVERB] Error finding user from connection', [
                 'error' => $e->getMessage(),
                 'socket_id' => $connection->id(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
 
