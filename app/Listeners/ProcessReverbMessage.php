@@ -186,6 +186,25 @@ class ProcessReverbMessage
     protected function handleSend(User $user, Conversation $conversation, array $payload): void
     {
         Log::info("[REVERB HANDLE] Sending message for user {$user->id} in conv {$conversation->id}");
+
+        $recentDuplicate = $conversation->messages()
+            ->where('sender_id', $user->id)
+            ->where('content', $payload['content'] ?? '')
+            ->where('type', $payload['type'] ?? 'text')
+            ->where('created_at', '>=', now()->subSeconds(2))
+            ->exists();
+
+        if ($recentDuplicate) {
+            Log::info('[REVERB DEDUP] Skipped duplicate message', [
+                'user_id' => $user->id,
+                'conversation_id' => $conversation->id,
+                'content' => $payload['content'] ?? '',
+                'type' => $payload['type'] ?? 'text',
+            ]);
+
+            return;
+        }
+
         $otherUser = $conversation->getOtherUser($user);
 
         if ($otherUser->blockedUsers()->where('blocked_id', $user->id)->exists()) {
