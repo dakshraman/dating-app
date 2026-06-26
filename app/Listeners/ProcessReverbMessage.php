@@ -2,15 +2,11 @@
 
 namespace App\Listeners;
 
-use App\Events\MessageDelivered;
-use App\Events\MessageRead;
-use App\Events\MessageSent;
-use App\Events\TypingIndicator;
-use App\Events\TypingStopped;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Notifications\NewMessageNotification;
 use App\Models\User;
+use App\Services\ConnectionTracker;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Reverb\Events\MessageReceived;
@@ -18,28 +14,58 @@ use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
 
 class ProcessReverbMessage
 {
+    protected \Laravel\Reverb\Application $app;
+    protected $connection;
+
     public function handle(MessageReceived $event): void
     {
-        \Illuminate\Support\Facades\Log::info('[REVERB RAW IN]', ['message' => $event->message]);
-        
         $data = json_decode($event->message, true);
         if (! $data || ! isset($data['event'])) {
-            \Illuminate\Support\Facades\Log::warning('[REVERB IN] Invalid JSON or missing event', ['raw' => $event->message]);
             return;
         }
 
-        \Illuminate\Support\Facades\Log::info('[REVERB IN] Message Received', $data);
-
         $eventName = $data['event'];
-        $channel = $data['channel'] ?? '';
         $payload = $data['data'] ?? [];
         if (is_string($payload)) {
             $payload = json_decode($payload, true) ?: [];
         }
 
+        $this->connection = $event->connection;
+        $this->app = $this->connection->app();
+
+        // Track user connection via private-user.{id} subscriptions
+        if ($eventName === 'pusher:subscribe') {
+            $subChannel = $payload['channel'] ?? '';
+            if (str_starts_with($subChannel, 'private-user.')) {
+                $userId = (int) substr($subChannel, strlen('private-user.'));
+                ConnectionTracker::setUserConnection($userId, $this->connection);
+                \Illuminate\Support\Facades\Log::info('[REVERB TRACK] User connected', [
+                    'user_id' => $userId,
+                    'socket_id' => $this->connection->id(),
+                ]);
+            }
+            return;
+        }
+
+        if ($eventName === 'pusher:unsubscribe') {
+            $subChannel = $payload['channel'] ?? '';
+            if (str_starts_with($subChannel, 'private-user.')) {
+                ConnectionTracker::removeUserByUserId(
+                    (int) substr($subChannel, strlen('private-user.'))
+                );
+                \Illuminate\Support\Facades\Log::info('[REVERB TRACK] User disconnected', [
+                    'channel' => $subChannel,
+                    'socket_id' => $this->connection->id(),
+                ]);
+            }
+            return;
+        }
+
         if (! str_starts_with($eventName, 'client-')) {
             return;
         }
+
+        $channel = $data['channel'] ?? '';
 
         preg_match('/^private-conversation\.(\d+)$/', $channel, $matches);
         if (! $matches) {
@@ -52,19 +78,17 @@ class ProcessReverbMessage
             return;
         }
 
-        $connection = $event->connection;
-        $userId = $this->getUserIdFromConnection($connection);
+        $userId = $this->resolveUserId($this->connection, $payload, $conversation);
         if (! $userId) {
-            \Illuminate\Support\Facades\Log::warning('[REVERB IN] Could not determine user from connection', ['socket_id' => $connection->id()]);
+            \Illuminate\Support\Facades\Log::warning('[REVERB IN] Could not determine user', [
+                'socket_id' => $this->connection->id(),
+                'conversation_id' => $conversationId,
+            ]);
             return;
         }
 
         $user = User::find($userId);
         if (! $user) {
-            return;
-        }
-
-        if ($conversation->user1_id !== $user->id && $conversation->user2_id !== $user->id) {
             return;
         }
 
@@ -80,47 +104,94 @@ class ProcessReverbMessage
         };
     }
 
-    protected function getUserIdFromConnection($connection): ?int
+    protected function sendToUser(int $userId, string $eventName, array $data): void
     {
-        try {
-            $channelManager = app(ChannelManager::class)->for($connection->app());
+        $connection = ConnectionTracker::getConnection($userId);
+        if (! $connection) {
+            \Illuminate\Support\Facades\Log::warning('[REVERB SEND] User not connected', ['user_id' => $userId]);
+            return;
+        }
 
-            $allChannels = $channelManager->all();
-            $channelCount = is_array($allChannels) ? count($allChannels) : 0;
+        $connection->send(json_encode([
+            'event' => $eventName,
+            'data' => json_encode($data),
+            'channel' => "private-user.{$userId}",
+        ]));
+    }
 
-            \Illuminate\Support\Facades\Log::info('[REVERB] Finding user from connection', [
-                'socket_id' => $connection->id(),
-                'app_id' => $connection->app()->id(),
-                'channel_count' => $channelCount,
-                'channels' => array_keys(is_array($allChannels) ? $allChannels : []),
-            ]);
+    protected function broadcastMessageSent(\App\Models\Message $message): void
+    {
+        $message->loadMissing('conversation');
+        $otherUserId = $message->sender_id === $message->conversation->user1_id
+            ? $message->conversation->user2_id
+            : $message->conversation->user1_id;
 
-            foreach ($allChannels as $name => $channel) {
-                if (preg_match('/^private-user\.(\d+)$/', $name, $matches)) {
-                    $channelConnection = $channel->find($connection);
-                    \Illuminate\Support\Facades\Log::info('[REVERB] Checking channel', [
-                        'channel' => $name,
-                        'found_connection' => $channelConnection ? 'yes' : 'no',
-                        'connection_id' => $channelConnection?->connection()?->id(),
-                    ]);
-                    if ($channelConnection) {
-                        return (int) $matches[1];
-                    }
-                }
+        $data = $this->formatMessageData($message);
+
+        // Send to sender directly (they're this connection)
+        $this->connection->send(json_encode([
+            'event' => 'App\\Events\\MessageSent',
+            'data' => json_encode($data),
+            'channel' => "private-user.{$message->sender_id}",
+        ]));
+
+        // Send to recipient via tracker
+        $this->sendToUser($otherUserId, 'App\\Events\\MessageSent', $data);
+    }
+
+    protected function formatMessageData(\App\Models\Message $message): array
+    {
+        $replyTo = $message->replyTo;
+        return [
+            'id' => $message->id,
+            'conversation_id' => $message->conversation_id,
+            'sender_id' => $message->sender_id,
+            'content' => $message->content,
+            'type' => $message->type,
+            'status' => $message->status,
+            'metadata' => $message->metadata,
+            'read_at' => $message->read_at,
+            'expires_at' => $message->expires_at,
+            'created_at' => $message->created_at,
+            'reply_to' => $replyTo ? [
+                'id' => $replyTo->id,
+                'content' => $replyTo->content,
+                'sender_id' => $replyTo->sender_id,
+                'sender' => [
+                    'id' => $replyTo->sender->id,
+                    'name' => $replyTo->sender->name,
+                ],
+            ] : null,
+            'sender' => [
+                'id' => $message->sender->id,
+                'name' => $message->sender->name,
+                'profile_photo' => $message->sender->profile_photo,
+            ],
+        ];
+    }
+
+    protected function resolveUserId($connection, array &$payload, Conversation $conversation): ?int
+    {
+        $senderId = $payload['sender_id'] ?? null;
+        if ($senderId && $this->isParticipant($senderId, $conversation)) {
+            unset($payload['sender_id']);
+            return (int) $senderId;
+        }
+
+        // Fallback: check ConnectionTracker
+        foreach (ConnectionTracker::getAllUserIds() as $userId) {
+            $conn = ConnectionTracker::getConnection($userId);
+            if ($conn && $conn->id() === $connection->id()) {
+                return $userId;
             }
-
-            \Illuminate\Support\Facades\Log::warning('[REVERB] No matching private-user channel found', [
-                'socket_id' => $connection->id(),
-            ]);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('[REVERB] Error finding user from connection', [
-                'error' => $e->getMessage(),
-                'socket_id' => $connection->id(),
-                'trace' => $e->getTraceAsString(),
-            ]);
         }
 
         return null;
+    }
+
+    protected function isParticipant(int $userId, Conversation $conversation): bool
+    {
+        return $conversation->user1_id === $userId || $conversation->user2_id === $userId;
     }
 
     protected function handleSend(User $user, Conversation $conversation, array $payload): void
@@ -181,7 +252,7 @@ class ProcessReverbMessage
         $conversation->update(['last_message_at' => now()]);
         $message->load(['sender', 'replyTo.sender']);
 
-        broadcast(new MessageSent($message));
+        $this->broadcastMessageSent($message);
 
         if ($otherUser && filled($otherUser->fcm_token)) {
             Notification::send($otherUser, new NewMessageNotification($message));
@@ -196,7 +267,16 @@ class ProcessReverbMessage
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
-        broadcast(new MessageRead($conversation, $user, 0));
+        $otherUser = $conversation->getOtherUser($user);
+        $data = ['conversation_id' => $conversation->id, 'last_read_message_id' => 0];
+
+        $this->connection->send(json_encode([
+            'event' => 'App\\Events\\MessageRead',
+            'data' => json_encode($data),
+            'channel' => "private-user.{$user->id}",
+        ]));
+
+        $this->sendToUser($otherUser->id, 'App\\Events\\MessageRead', $data);
     }
 
     protected function handleReact(User $user, Conversation $conversation, array $payload): void
@@ -225,7 +305,7 @@ class ProcessReverbMessage
         $message->update(['metadata' => array_merge($message->metadata ?? [], ['reactions' => $reactions])]);
         $message->load(['sender', 'replyTo.sender']);
 
-        broadcast(new MessageSent($message));
+        $this->broadcastMessageSent($message);
     }
 
     protected function handleDelete(User $user, Conversation $conversation, array $payload): void
@@ -273,20 +353,22 @@ class ProcessReverbMessage
         $message = $conversation->messages()->create($messageData);
         $message->load(['sender', 'replyTo.sender']);
 
-        broadcast(new MessageSent($message));
+        $this->broadcastMessageSent($message);
     }
 
     protected function handleTypingIndicator(User $user, Conversation $conversation, array $payload): void
     {
         \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Typing indicator for user {$user->id} in conv {$conversation->id}");
         $otherUser = $conversation->getOtherUser($user);
-        broadcast(new TypingIndicator($conversation->id, $user->id, $otherUser->id, $user->name));
+        $data = ['conversation_id' => $conversation->id, 'user_id' => $user->id, 'user_name' => $user->name];
+        $this->sendToUser($otherUser->id, 'App\\Events\\TypingIndicator', $data);
     }
 
     protected function handleTypingStopped(User $user, Conversation $conversation, array $payload): void
     {
         \Illuminate\Support\Facades\Log::info("[REVERB HANDLE] Typing stopped for user {$user->id} in conv {$conversation->id}");
         $otherUser = $conversation->getOtherUser($user);
-        broadcast(new TypingStopped($conversation->id, $user->id, $otherUser->id));
+        $data = ['conversation_id' => $conversation->id, 'user_id' => $user->id];
+        $this->sendToUser($otherUser->id, 'App\\Events\\TypingStopped', $data);
     }
 }
