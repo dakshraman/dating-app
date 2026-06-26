@@ -2,12 +2,14 @@
 
 namespace App\Listeners;
 
+use App\Events\MessageRead;
+use App\Events\MessageSent;
+use App\Events\TypingIndicator;
+use App\Events\TypingStopped;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessageNotification;
-use App\Services\ConnectionTracker;
-use App\Services\ReverbChannelStore;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
@@ -36,29 +38,6 @@ class ProcessReverbMessage
 
         $this->connection = $event->connection;
         $this->app = $this->connection->app();
-
-        if ($eventName === 'pusher:subscribe') {
-            $subChannel = $payload['channel'] ?? '';
-            if (str_starts_with($subChannel, 'private-user.')) {
-                ConnectionTracker::setUserConnection(
-                    (int) substr($subChannel, strlen('private-user.')),
-                    $this->connection
-                );
-            }
-
-            return;
-        }
-
-        if ($eventName === 'pusher:unsubscribe') {
-            $subChannel = $payload['channel'] ?? '';
-            if (str_starts_with($subChannel, 'private-user.')) {
-                ConnectionTracker::removeUserByUserId(
-                    (int) substr($subChannel, strlen('private-user.'))
-                );
-            }
-
-            return;
-        }
 
         if (! str_starts_with($eventName, 'client-')) {
             return;
@@ -92,6 +71,8 @@ class ProcessReverbMessage
             return;
         }
 
+        $this->connection = $event->connection;
+
         match ($eventName) {
             'client-MessageSend' => $this->handleSend($user, $conversation, $payload),
             'client-MessageRead' => $this->handleRead($user, $conversation, $payload),
@@ -102,51 +83,6 @@ class ProcessReverbMessage
             'client-TypingStopped' => $this->handleTypingStopped($user, $conversation, $payload),
             default => null,
         };
-    }
-
-    protected function broadcastToUserChannel(int $userId, string $eventName, array $data): void
-    {
-        $cm = ReverbChannelStore::get();
-        if ($cm) {
-            try {
-                $channel = $cm->for($this->app)->find("private-user.{$userId}");
-                if ($channel) {
-                    $channel->broadcast([
-                        'event' => $eventName,
-                        'data' => json_encode($data),
-                        'channel' => "private-user.{$userId}",
-                    ]);
-
-                    return;
-                }
-            } catch (Throwable $e) {
-                Log::warning('[REVERB SEND] ChannelStore find failed', [
-                    'user_id' => $userId,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
-        $connection = ConnectionTracker::getConnection($userId);
-        if (! $connection) {
-            Log::warning('[REVERB SEND] User not connected', ['user_id' => $userId]);
-
-            return;
-        }
-
-        try {
-            $connection->send(json_encode([
-                'event' => $eventName,
-                'data' => json_encode($data),
-                'channel' => "private-user.{$userId}",
-            ]));
-        } catch (Throwable $e) {
-            Log::warning('[REVERB SEND] Failed', [
-                'user_id' => $userId,
-                'error' => $e->getMessage(),
-            ]);
-            ConnectionTracker::removeUserByUserId($userId);
-        }
     }
 
     protected function sendToSender(string $eventName, array $data, string $channel): void
@@ -171,22 +107,7 @@ class ProcessReverbMessage
             ? $message->conversation->user2_id
             : $message->conversation->user1_id;
 
-        $data = $this->formatMessageData($message);
-
-        $this->sendToSender(
-            'App\\Events\\MessageSent',
-            $data,
-            "private-user.{$message->sender_id}"
-        );
-
-        $this->broadcastToUserChannel($otherUserId, 'App\\Events\\MessageSent', $data);
-    }
-
-    protected function formatMessageData(Message $message): array
-    {
-        $replyTo = $message->replyTo;
-
-        return [
+        $data = [
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
             'sender_id' => $message->sender_id,
@@ -197,7 +118,10 @@ class ProcessReverbMessage
             'read_at' => $message->read_at,
             'expires_at' => $message->expires_at,
             'created_at' => $message->created_at,
-            'reply_to' => $replyTo ? [
+        ];
+        $replyTo = $message->replyTo;
+        if ($replyTo) {
+            $data['reply_to'] = [
                 'id' => $replyTo->id,
                 'content' => $replyTo->content,
                 'sender_id' => $replyTo->sender_id,
@@ -205,13 +129,35 @@ class ProcessReverbMessage
                     'id' => $replyTo->sender->id,
                     'name' => $replyTo->sender->name,
                 ],
-            ] : null,
-            'sender' => [
-                'id' => $message->sender->id,
-                'name' => $message->sender->name,
-                'profile_photo' => $message->sender->profile_photo,
-            ],
+            ];
+        }
+        $data['sender'] = [
+            'id' => $message->sender->id,
+            'name' => $message->sender->name,
+            'profile_photo' => $message->sender->profile_photo,
         ];
+
+        // Send to sender's WebSocket directly (instant, no deadlock)
+        $this->sendToSender(
+            'App\\Events\\MessageSent',
+            $data,
+            "private-user.{$message->sender_id}"
+        );
+
+        // Queue the broadcast event for recipient delivery
+        // The queue worker is a separate process, so broadcast() will not deadlock
+        try {
+            broadcast(new MessageSent($message));
+            Log::info('[REVERB BC] Queued broadcast for MessageSent', [
+                'message_id' => $message->id,
+                'recipient_id' => $otherUserId,
+            ]);
+        } catch (Throwable $e) {
+            Log::warning('[REVERB BC] Failed to queue broadcast', [
+                'error' => $e->getMessage(),
+                'message_id' => $message->id,
+            ]);
+        }
     }
 
     protected function resolveUserId($connection, array &$payload, Conversation $conversation): ?int
@@ -223,11 +169,10 @@ class ProcessReverbMessage
             return (int) $senderId;
         }
 
-        foreach (ConnectionTracker::getAllUserIds() as $userId) {
-            $conn = ConnectionTracker::getConnection($userId);
-            if ($conn && $conn->id() === $connection->id()) {
-                return $userId;
-            }
+        // Fallback: user_id (used by TypingIndicator/TypingStopped)
+        $userId = $payload['user_id'] ?? null;
+        if ($userId && $this->isParticipant((int) $userId, $conversation)) {
+            return (int) $userId;
         }
 
         return null;
@@ -312,15 +257,20 @@ class ProcessReverbMessage
             ->update(['read_at' => now()]);
 
         $otherUser = $conversation->getOtherUser($user);
-        $data = ['conversation_id' => $conversation->id, 'last_read_message_id' => 0];
 
         $this->sendToSender(
             'App\\Events\\MessageRead',
-            $data,
+            ['conversation_id' => $conversation->id, 'last_read_message_id' => 0],
             "private-user.{$user->id}"
         );
 
-        $this->broadcastToUserChannel($otherUser->id, 'App\\Events\\MessageRead', $data);
+        try {
+            broadcast(new MessageRead($conversation, $user, 0));
+        } catch (Throwable $e) {
+            Log::warning('[REVERB BC] Failed to queue MessageRead broadcast', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     protected function handleReact(User $user, Conversation $conversation, array $payload): void
@@ -404,15 +354,39 @@ class ProcessReverbMessage
     {
         Log::info("[REVERB HANDLE] Typing indicator for user {$user->id} in conv {$conversation->id}");
         $otherUser = $conversation->getOtherUser($user);
-        $data = ['conversation_id' => $conversation->id, 'user_id' => $user->id, 'user_name' => $user->name];
-        $this->broadcastToUserChannel($otherUser->id, 'App\\Events\\TypingIndicator', $data);
+
+        $this->sendToSender(
+            'App\\Events\\TypingIndicator',
+            ['conversation_id' => $conversation->id, 'user_id' => $user->id, 'user_name' => $user->name],
+            "private-user.{$user->id}"
+        );
+
+        try {
+            broadcast(new TypingIndicator($conversation->id, $user->id, $otherUser->id, $user->name));
+        } catch (Throwable $e) {
+            Log::warning('[REVERB BC] Failed to queue TypingIndicator broadcast', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     protected function handleTypingStopped(User $user, Conversation $conversation, array $payload): void
     {
         Log::info("[REVERB HANDLE] Typing stopped for user {$user->id} in conv {$conversation->id}");
         $otherUser = $conversation->getOtherUser($user);
-        $data = ['conversation_id' => $conversation->id, 'user_id' => $user->id];
-        $this->broadcastToUserChannel($otherUser->id, 'App\\Events\\TypingStopped', $data);
+
+        $this->sendToSender(
+            'App\\Events\\TypingStopped',
+            ['conversation_id' => $conversation->id, 'user_id' => $user->id],
+            "private-user.{$user->id}"
+        );
+
+        try {
+            broadcast(new TypingStopped($conversation->id, $user->id, $otherUser->id, $user->name));
+        } catch (Throwable $e) {
+            Log::warning('[REVERB BC] Failed to queue TypingStopped broadcast', [
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
