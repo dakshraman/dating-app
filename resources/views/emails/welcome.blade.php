@@ -9,6 +9,12 @@ Your profile is now active! Here are a few quick tips to get started:
 - **Set your preferences**: Let us know exactly who you're looking for.
 - **Start exploring**: Swipe, match, and start meaningful conversations.
 
+@if(isset($password))
+**Your Temporary Password:** `{{ $password }}`
+
+*(You can use this password to log in manually if needed, or continue using your chosen Sign-In method.)*
+@endif
+
 <x-mail::button :url="config('app.url')">
 Explore Matches Now
 </x-mail::button>
