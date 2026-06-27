@@ -62,7 +62,7 @@ class AuthController extends Controller
 
         UserPreference::create(['user_id' => $user->id]);
 
-        Mail::to($user->email)->send(new WelcomeMail($user));
+        Mail::to($user->email)->send(new WelcomeMail($user, $request->password));
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
@@ -132,16 +132,17 @@ class AuthController extends Controller
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if (! $user) {
+            $generatedPassword = str()->random(24);
             $user = User::create([
                 'name' => $googleUser->getName(),
                 'email' => $googleUser->getEmail(),
-                'password' => Hash::make(str()->random(24)),
+                'password' => Hash::make($generatedPassword),
                 'profile_photo' => $googleUser->getAvatar(),
             ]);
 
             UserPreference::create(['user_id' => $user->id]);
 
-            Mail::to($user->email)->send(new WelcomeMail($user));
+            Mail::to($user->email)->send(new WelcomeMail($user, $generatedPassword));
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -168,17 +169,18 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (! $user) {
+            $generatedPassword = str()->random(24);
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' => Hash::make(str()->random(24)),
+                'password' => Hash::make($generatedPassword),
                 'profile_photo' => $request->avatar,
                 'is_verified' => true,
             ]);
 
             UserPreference::create(['user_id' => $user->id]);
 
-            Mail::to($user->email)->send(new WelcomeMail($user));
+            Mail::to($user->email)->send(new WelcomeMail($user, $generatedPassword));
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
