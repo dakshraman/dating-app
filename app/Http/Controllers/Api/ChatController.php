@@ -11,6 +11,7 @@ use App\Events\TypingStopped;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\UserMatch;
 use App\Notifications\NewMessageNotification;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\JsonResponse;
@@ -69,6 +70,27 @@ class ChatController extends Controller
             ->values();
 
         return response()->json($conversations);
+    }
+
+    public function initiateFromMatch(Request $request): JsonResponse
+    {
+        $request->validate([
+            'match_id' => 'required|exists:matches,id',
+        ]);
+
+        $user = $request->user();
+        $match = UserMatch::findOrFail($request->integer('match_id'));
+
+        if ($match->user1_id !== $user->id && $match->user2_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $conversation = Conversation::firstOrCreate(
+            ['match_id' => $match->id],
+            ['user1_id' => $match->user1_id, 'user2_id' => $match->user2_id]
+        );
+
+        return response()->json(['id' => $conversation->id]);
     }
 
     public function messages(Request $request, Conversation $conversation): JsonResponse

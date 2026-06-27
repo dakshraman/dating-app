@@ -47,6 +47,7 @@ Route::middleware(['auth:sanctum', 'last.active', 'throttle:60,1'])->group(funct
     Route::delete('/matches/{id}', [SwipeController::class, 'destroy']);
 
     Route::get('/conversations', [ChatController::class, 'conversations']);
+    Route::post('/conversations', [ChatController::class, 'initiateFromMatch']);
     Route::delete('/conversations/{conversation}', [ChatController::class, 'deleteConversation']);
     Route::get('/conversations/{conversation}/messages', [ChatController::class, 'messages']);
     Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage'])->middleware('throttle:20,1');
@@ -91,4 +92,4 @@ Route::middleware(['auth:sanctum', 'last.active', 'throttle:60,1'])->group(funct
         return response()->json(['message' => 'FCM token removed']);
     });
 });
-Route::middleware("auth:sanctum")->post("/broadcasting/auth", [\Illuminate\Broadcasting\BroadcastController::class, "authenticate"]);
+Route::middleware('auth:sanctum')->post('/broadcasting/auth', [BroadcastController::class, 'authenticate']);
