@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\SwipeController;
 use App\Http\Controllers\Api\WebhookController;
+use Illuminate\Broadcasting\BroadcastController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,7 @@ Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 've
 Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:5,60');
 
 Route::middleware(['auth:sanctum', 'last.active', 'throttle:60,1'])->group(function () {
+    Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
 
