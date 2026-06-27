@@ -89,3 +89,4 @@ Route::middleware(['auth:sanctum', 'last.active', 'throttle:60,1'])->group(funct
         return response()->json(['message' => 'FCM token removed']);
     });
 });
+Route::middleware("auth:sanctum")->post("/broadcasting/auth", [\Illuminate\Broadcasting\BroadcastController::class, "authenticate"]);
