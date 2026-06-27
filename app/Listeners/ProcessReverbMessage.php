@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Reverb\Application;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\EventDispatcher;
 use Throwable;
 
 class ProcessReverbMessage
@@ -144,14 +145,32 @@ class ProcessReverbMessage
             "private-user.{$message->sender_id}"
         );
 
-        // Queue the broadcast event for recipient delivery
-        // The queue worker is a separate process, so broadcast() will not deadlock
+        // Broadcast to recipient via Reverb's internal EventDispatcher
+        // Same mechanism as client event whispers (typing indicators) — always works
         try {
-            broadcast(new MessageSent($message));
-            Log::info('[REVERB BC] Queued broadcast for MessageSent', [
+            EventDispatcher::dispatchSynchronously(
+                $this->connection->app(),
+                [
+                    'event' => 'App\\Events\\MessageSent',
+                    'channel' => "private-user.{$otherUserId}",
+                    'data' => $data,
+                ],
+                $this->connection,
+            );
+            Log::info('[REVERB DISPATCH] Sent MessageSent via EventDispatcher', [
                 'message_id' => $message->id,
                 'recipient_id' => $otherUserId,
             ]);
+        } catch (Throwable $e) {
+            Log::warning('[REVERB DISPATCH] Failed to send via EventDispatcher', [
+                'error' => $e->getMessage(),
+                'message_id' => $message->id,
+            ]);
+        }
+
+        // Queue the broadcast event for recipient delivery (fallback)
+        try {
+            broadcast(new MessageSent($message));
         } catch (Throwable $e) {
             Log::warning('[REVERB BC] Failed to queue broadcast', [
                 'error' => $e->getMessage(),
