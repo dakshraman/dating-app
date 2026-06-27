@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Reverb\Application;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
 use Laravel\Reverb\Protocols\Pusher\EventDispatcher;
 use Throwable;
 
@@ -133,6 +134,30 @@ class ProcessReverbMessage
             'name' => $message->sender->name,
             'profile_photo' => $message->sender->profile_photo,
         ];
+
+        // Debug: inspect ChannelManager state before broadcasting
+        try {
+            $cm = app(ChannelManager::class)->for($this->connection->app());
+            $channelName = "private-conversation.{$message->conversation_id}";
+            $channel = $cm->find($channelName);
+
+            if ($channel) {
+                $connections = $channel->connections();
+                Log::info('[REVERB CM] Channel found', [
+                    'channel' => $channelName,
+                    'connection_count' => iterator_count($connections),
+                ]);
+            } else {
+                Log::warning('[REVERB CM] Channel NOT FOUND', [
+                    'channel' => $channelName,
+                    'matching_channels' => iterator_count($cm->findByNamePrefix('private-conversation')),
+                ]);
+            }
+        } catch (Throwable $e) {
+            Log::warning('[REVERB CM] Error inspecting ChannelManager', [
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         // Broadcast to conversation channel — both users receive it simultaneously
         try {
