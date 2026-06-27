@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Events\MessageSent;
-use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Console\Command;
 
@@ -32,7 +31,7 @@ class ReverbTest extends Command
             broadcast(new MessageSent($message));
             $this->info('Broadcast dispatched successfully');
         } catch (\Throwable $e) {
-            $this->error('Broadcast failed: ' . $e->getMessage());
+            $this->error('Broadcast failed: '.$e->getMessage());
         }
     }
 }

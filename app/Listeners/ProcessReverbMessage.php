@@ -145,17 +145,26 @@ class ProcessReverbMessage
                 $connections = $channel->connections();
                 Log::info('[REVERB CM] Channel found', [
                     'channel' => $channelName,
-                    'connection_count' => iterator_count($connections),
+                    'connection_count' => count($connections),
                 ]);
             } else {
+                $all = $cm->all();
+                $matching = [];
+                foreach ($all as $name => $ch) {
+                    if (str_contains($name, 'private-conversation')) {
+                        $matching[] = $name.' ('.count($ch->connections()).' conns)';
+                    }
+                }
                 Log::warning('[REVERB CM] Channel NOT FOUND', [
                     'channel' => $channelName,
-                    'matching_channels' => iterator_count($cm->findByNamePrefix('private-conversation')),
+                    'all_channels' => array_keys($all),
+                    'matching_channels' => $matching,
                 ]);
             }
         } catch (Throwable $e) {
             Log::warning('[REVERB CM] Error inspecting ChannelManager', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
         }
 
