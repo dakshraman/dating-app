@@ -20,12 +20,8 @@ class MessageSent implements ShouldBroadcast
     {
         $this->message->loadMissing('conversation');
 
-        $otherUserId = $this->message->sender_id === $this->message->conversation->user1_id
-            ? $this->message->conversation->user2_id
-            : $this->message->conversation->user1_id;
-
         return [
-            new PrivateChannel("user.{$otherUserId}"),
+            new PrivateChannel("conversation.{$this->message->conversation_id}"),
         ];
     }
 

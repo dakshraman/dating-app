@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\MessageRead;
-use App\Events\MessageSent;
 use App\Events\TypingIndicator;
 use App\Events\TypingStopped;
 use App\Models\Conversation;
@@ -104,9 +103,6 @@ class ProcessReverbMessage
     protected function broadcastMessageSent(Message $message): void
     {
         $message->loadMissing('conversation');
-        $otherUserId = $message->sender_id === $message->conversation->user1_id
-            ? $message->conversation->user2_id
-            : $message->conversation->user1_id;
 
         $data = [
             'id' => $message->id,
@@ -138,41 +134,22 @@ class ProcessReverbMessage
             'profile_photo' => $message->sender->profile_photo,
         ];
 
-        // Send to sender's WebSocket directly (instant, no deadlock)
-        $this->sendToSender(
-            'App\\Events\\MessageSent',
-            $data,
-            "private-user.{$message->sender_id}"
-        );
-
-        // Broadcast to recipient via Reverb's internal EventDispatcher
-        // Same mechanism as client event whispers (typing indicators) — always works
+        // Broadcast to conversation channel — both users receive it simultaneously
         try {
             EventDispatcher::dispatchSynchronously(
                 $this->connection->app(),
                 [
                     'event' => 'App\\Events\\MessageSent',
-                    'channel' => "private-user.{$otherUserId}",
+                    'channel' => "private-conversation.{$message->conversation_id}",
                     'data' => $data,
                 ],
-                $this->connection,
             );
-            Log::info('[REVERB DISPATCH] Sent MessageSent via EventDispatcher', [
+            Log::info('[REVERB DISPATCH] Sent MessageSent via conversation channel', [
                 'message_id' => $message->id,
-                'recipient_id' => $otherUserId,
+                'conversation_id' => $message->conversation_id,
             ]);
         } catch (Throwable $e) {
             Log::warning('[REVERB DISPATCH] Failed to send via EventDispatcher', [
-                'error' => $e->getMessage(),
-                'message_id' => $message->id,
-            ]);
-        }
-
-        // Queue the broadcast event for recipient delivery (fallback)
-        try {
-            broadcast(new MessageSent($message));
-        } catch (Throwable $e) {
-            Log::warning('[REVERB BC] Failed to queue broadcast', [
                 'error' => $e->getMessage(),
                 'message_id' => $message->id,
             ]);
