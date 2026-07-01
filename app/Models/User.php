@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_token', 'is_banned', 'ban_reason', 'banned_at', 'mask_name'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'gender', 'birth_date', 'bio', 'location', 'latitude', 'longitude', 'profile_photo', 'verification_photo', 'is_verified', 'is_active', 'last_active_at', 'remaining_swipes', 'remaining_super_likes', 'fcm_token', 'is_banned', 'ban_reason', 'banned_at', 'mask_name', 'incognito_mode', 'travel_latitude', 'travel_longitude'])]
 #[Hidden(['password', 'remember_token'])]
 /**
  * @property int $id
@@ -64,6 +64,9 @@ class User extends Authenticatable implements FilamentUser
             'fcm_token' => 'string',
             'remaining_swipes' => 'integer',
             'remaining_super_likes' => 'integer',
+            'incognito_mode' => 'boolean',
+            'travel_latitude' => 'float',
+            'travel_longitude' => 'float',
         ];
     }
 
@@ -230,6 +233,7 @@ class User extends Authenticatable implements FilamentUser
         return $query->where('users.id', '!=', $user->id)
             ->where('users.is_active', true)
             ->where('users.is_banned', false)
+            ->where('users.incognito_mode', false)
             ->whereNotNull('users.birth_date')
             ->whereNotNull('users.gender')
             ->whereNotNull('users.profile_photo')

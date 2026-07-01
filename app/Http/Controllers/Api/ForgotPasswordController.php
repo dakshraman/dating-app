@@ -116,7 +116,7 @@ class ForgotPasswordController extends Controller
         }
 
         $user->update([
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
         ]);
 
         // Invalidate all existing tokens (force re-login)

@@ -16,12 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(prepend: [
-            CheckBanned::class,
-        ]);
-
         $middleware->alias([
             'last.active' => UpdateLastActiveAt::class,
+            'check.banned' => CheckBanned::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

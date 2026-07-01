@@ -39,6 +39,9 @@ class ProfileController extends Controller
             'profession' => 'nullable|string|max:255',
             'income_range' => 'nullable|string|max:255',
             'mask_name' => 'sometimes|boolean',
+            'incognito_mode' => 'sometimes|boolean',
+            'travel_latitude' => 'nullable|numeric',
+            'travel_longitude' => 'nullable|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -50,7 +53,7 @@ class ProfileController extends Controller
             'location', 'latitude', 'longitude', 'profile_photo',
             'state', 'city', 'religion', 'mother_tongue',
             'dietary_preference', 'education', 'profession', 'income_range',
-            'mask_name',
+            'mask_name', 'incognito_mode', 'travel_latitude', 'travel_longitude'
         ]));
 
         return response()->json($user->fresh()->load(['photos', 'preferences', 'interests', 'prompts']));
@@ -223,10 +226,13 @@ class ProfileController extends Controller
                 $query->whereBetween('birth_date', [$minDate, $maxDate]);
             }
 
-            if ($preferences->max_distance && $user->latitude && $user->longitude) {
+            $searchLat = $user->travel_latitude ?? $user->latitude;
+            $searchLng = $user->travel_longitude ?? $user->longitude;
+
+            if ($preferences->max_distance && $searchLat && $searchLng) {
                 $haversine = '(6371 * acos(case when (cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))) > 1 then 1 else (cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))) end))';
                 $query->whereRaw("{$haversine} <= ?", array_merge(
-                    [$user->latitude, $user->longitude, $user->latitude, $user->latitude, $user->longitude, $user->latitude],
+                    [$searchLat, $searchLng, $searchLat, $searchLat, $searchLng, $searchLat],
                     [$preferences->max_distance]
                 ));
             }

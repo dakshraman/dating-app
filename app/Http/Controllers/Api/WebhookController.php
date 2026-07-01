@@ -60,7 +60,7 @@ class WebhookController extends Controller
                 [
                     'subscription_plan_id' => 1, // Fallback plan ID
                     'starts_at' => Carbon::now(),
-                    'expires_at' => $expirationDate,
+                    'ends_at' => $expirationDate,
                     'is_active' => true,
                 ]
             );
@@ -68,7 +68,7 @@ class WebhookController extends Controller
         } elseif (in_array($type, ['CANCELLATION', 'EXPIRATION'])) {
             UserSubscription::where('user_id', $user->id)->update([
                 'is_active' => false,
-                'expires_at' => Carbon::now(),
+                'ends_at' => Carbon::now(),
             ]);
             Log::info("RevenueCat: Subscription expired/cancelled for user {$user->id}");
         }

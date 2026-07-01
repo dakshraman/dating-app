@@ -24,7 +24,7 @@ Route::post('/forgot-password/send-otp', [ForgotPasswordController::class, 'send
 Route::post('/forgot-password/verify-otp', [ForgotPasswordController::class, 'verifyOtp'])->middleware('throttle:10,60');
 Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->middleware('throttle:5,60');
 
-Route::middleware(['auth:sanctum', 'last.active', 'throttle:60,1'])->group(function () {
+Route::middleware(['auth:sanctum', 'check.banned', 'last.active', 'throttle:60,1'])->group(function () {
     Route::post('/broadcasting/auth', [BroadcastController::class, 'authenticate']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
